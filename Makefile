@@ -11,7 +11,5 @@ import_yolov8:
 	act_yolov8
 
 deact:
-	source deactivate
+	conda deactivate
 
-print:
-	@echo $$sample
