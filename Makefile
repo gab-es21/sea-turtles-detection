@@ -13,3 +13,6 @@ import_yolov8:
 deact:
 	conda deactivate
 
+info:
+	conda info --envs
+
