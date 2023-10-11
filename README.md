@@ -1,12 +1,29 @@
 # sea-turtles-detection
 Detect sea turtles from drone imagery.
 
+## Environment File
+
+Each model has a `.env` file stored in your Google Drive at `My_Drive/Colab_Notebooks/env`.
+
+ You can request access to the `.env` files if needed. There is a sample `.env` file in each model folder in the repository.
+
+To access the `.env` files, mount your Google Drive in the Colab notebook.
+
+
 ## Edit Colab Notebook
 
 To edit a Colab notebook on GitHub:
 
 1. Create a new branch on GitHub.
-2. Click the **Open in Colab** link at the top of the notebook. If the link is deprecated, choose the notebook from this link: https://colab.research.google.com/github/gab-es21/sea-turtles-detection/, making sure to select the notebook on the newly created branch.
-3. To edit the notebook, you need to create a copy on your Google Drive. Click **File > Save a copy in Drive**.
+
+2. Click the **Open in Colab** link at the top of the notebook. 
+<br /> If the link is deprecated, choose the notebook from this link:
+<br /> https://colab.research.google.com/github/gab-es21/sea-turtles-detection/.<br /> Make sure to select the notebook on the newly created branch.
+
+3. To edit the notebook, you need to create a copy on your Google Drive.
+<br /> Click **File > Save a copy in Drive**.
+
 4. Make your edits to the notebook.
-5. To save your changes back to GitHub, click **File > Save a copy in GitHub**.
+
+5. To save your changes back to GitHub.
+<br /> Click **File > Save a copy in GitHub**.
