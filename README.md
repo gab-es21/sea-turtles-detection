@@ -27,3 +27,4 @@ To edit a Colab notebook on GitHub:
 
 5. To save your changes back to GitHub.
 <br /> Click **File > Save a copy in GitHub**.
+Save it on the main branch.
