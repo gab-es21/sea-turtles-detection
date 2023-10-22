@@ -3,7 +3,8 @@ Detect sea turtles from drone imagery.
 
 ## Dataset
 
-The dataset is available on Roboflow at [this link](https://universe.roboflow.com/gabriel-esteves-dy2cw/sea-turtles-yia2e/dataset/1).
+The dataset is available on Roboflow at this link:
+<br /> [https://universe.roboflow.com/gabriel-esteves-dy2cw/sea-turtles-yia2e/dataset/1](https://universe.roboflow.com/gabriel-esteves-dy2cw/sea-turtles-yia2e/dataset/1).
 
 The dataset contains 1,358 annotated images of turtles.
 
