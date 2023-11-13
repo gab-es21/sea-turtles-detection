@@ -1,1 +1,5 @@
+.venv
+.zip
+
 .env
+yolov8.env
