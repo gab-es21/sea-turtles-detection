@@ -10,6 +10,11 @@ The dataset contains 1,358 annotated images of turtles.
 
 This dataset can be used to train and evaluate object detection models for turtle detection.
 
+## Models Compare
+| Model Run | Model architecture | Learning Rate | Optimizer | Training epochs | Best epoch | Precision | Recall | Dropout rate | Train Data | Validation Data | Data augmentation | Anchor box sizes| IoU threshold | Non-maximum suppression |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | YOLOv8 | --- | --- | 100 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+
 ## Environment File
 
 Each model has a `.env` file stored in your Google Drive at `My_Drive/Colab_Notebooks/env`.
