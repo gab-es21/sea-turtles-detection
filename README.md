@@ -22,8 +22,8 @@ This dataset can be used to train and evaluate object detection models for turtl
 ## Models Compare
 | Model Run | Model architecture | Learning Rate | Optimizer | Training epochs | Best epoch | Precision | Recall | mAP50 | mAP50-95 | Dataset ID | Notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | YOLOv8 | 0.01 | SGD | 50 | 49 | 0.748 | 0.764 | 0.809 | 0.449 | 1 | Colab |
-| 2 | YOLOv8 | 0.01 | SGD | 5 | 5 | 0.652 | 0.419 | 0.453 |  0.248 | 2 | Colab |
+| 1 | YOLOv8 | 0.01 | SGD | 50 | 49 | 0.748 | 0.764 | 0.809 | 0.449 | 1 | Colab/Drive |
+| 2 | YOLOv8 | 0.01 | SGD | 5 | 5 | 0.652 | 0.419 | 0.453 |  0.248 | 2 | Colab/Drive |
 | 3 | YOLOv8 | 0.01 | SGD | 150 | - | 0.830 | 0.92 | 0.825 |  - | 1 | train2 |
 | 4 | YOLOv8 | 0.01 | SGD | 400 | 176 | 0.824 | 0.92 | 0.823 |  - | 1 | train3 |
 | 5 | YOLOv8 | 0.01 | SGD | 100 | - | 0.786 | 0.91 | 0.827 |  - | 2 | train |
