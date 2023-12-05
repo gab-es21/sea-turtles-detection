@@ -11,12 +11,16 @@ The dataset contains 1,358 annotated images of turtles.
 This dataset can be used to train and evaluate object detection models for turtle detection.
 
 ## Datasets Compare
+<details>
+  <summary> More </summary>
+
+
 | Dataset ID | Dataset Name | Train Set | Validation Set | Test Set | Data augmentation | Version | Link/Project |
 |---|---|---|---|---|---|---|---|
 |1|B|968|272|118|-|1|[sea-turtles-yia2e](https://universe.roboflow.com/gabriel-esteves-dy2cw/sea-turtles-yia2e)|
 |2|W|15488|4352|1888|Tile|1|[seaturtletile](https://universe.roboflow.com/seaturtletile/seaturtletile/model/1)|
 
-
+</details>
 
 
 ## Models Compare
