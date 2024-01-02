@@ -3,6 +3,9 @@ Detect sea turtles from drone imagery.
 
 ## Dataset
 
+<details>
+  <summary> More Details </summary>
+
 The dataset is available on Roboflow at this link:
 <br /> [https://universe.roboflow.com/gabriel-esteves-dy2cw/sea-turtles-yia2e/dataset/1](https://universe.roboflow.com/gabriel-esteves-dy2cw/sea-turtles-yia2e/dataset/1).
 
@@ -10,16 +13,27 @@ The dataset contains 1,358 annotated images of turtles.
 
 This dataset can be used to train and evaluate object detection models for turtle detection.
 
+</details>
+
 ## Datasets Compare
+
+<details>
+  <summary> More Details </summary>
+
+
 | Dataset ID | Dataset Name | Train Set | Validation Set | Test Set | Data augmentation | Version | Link/Project |
 |---|---|---|---|---|---|---|---|
 |1|B|968|272|118|-|1|[sea-turtles-yia2e](https://universe.roboflow.com/gabriel-esteves-dy2cw/sea-turtles-yia2e)|
 |2|W|15488|4352|1888|Tile|1|[seaturtletile](https://universe.roboflow.com/seaturtletile/seaturtletile/model/1)|
 
-
+</details>
 
 
 ## Models Compare
+
+<details>
+  <summary> More Details </summary>
+
 | Model Run | Model architecture | Learning Rate | Optimizer | Training epochs | Best epoch | Precision | Recall | mAP50 | mAP50-95 | Dataset ID | Notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | 1 | YOLOv8 | 0.01 | SGD | 50 | 49 | 0.748 | 0.764 | 0.809 | 0.449 | 1 | Colab/Drive |
@@ -29,7 +43,12 @@ This dataset can be used to train and evaluate object detection models for turtl
 | 5 | YOLOv8 | 0.01 | SGD | 100 | - | 0.786 | 0.91 | 0.827 |  - | 2 | train |
 | 6 | YOLOv5 | 0.01 | SGD | 100 | - | - | - | - |  - | 1 | train |
 
+</details>
+
 ## Environment File
+
+<details>
+  <summary> More Details </summary>
 
 Each model has a `.env` file stored in your Google Drive at `My_Drive/Colab_Notebooks/env`.
 
@@ -37,8 +56,12 @@ Each model has a `.env` file stored in your Google Drive at `My_Drive/Colab_Note
 
 To access the `.env` files, mount your Google Drive in the Colab notebook.
 
+</details>
 
 ## Edit Colab Notebook
+
+<details>
+  <summary> More Details </summary>
 
 To edit a Colab notebook on GitHub:
 
@@ -56,3 +79,5 @@ To edit a Colab notebook on GitHub:
 5. To save your changes back to GitHub.
 <br /> Click **File > Save a copy in GitHub**.
 Save it on the main branch.
+
+</details>
