@@ -42,6 +42,7 @@ This dataset can be used to train and evaluate object detection models for turtl
 | 4 | YOLOv8 | 0.01 | SGD | 400 | 176 | 0.824 | 0.92 | 0.823 |  - | 1 | train3 |
 | 5 | YOLOv8 | 0.01 | SGD | 100 | - | 0.786 | 0.91 | 0.827 |  - | 2 | train |
 | 6 | YOLOv5 | 0.01 | SGD | 100 | - | - | - | - |  - | 1 | train |
+| 7 | YOLOv8m | 0.01 | SGD | 100 | 55 | 0.86623 | 0.66613 | 0.79612 |  0.48666 | 1 | train3 |
 
 </details>
 
