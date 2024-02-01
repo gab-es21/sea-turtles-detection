@@ -1,0 +1,2 @@
+Model summary (fused): 168 layers, 11125971 parameters, 0 gradients, 28.4 GFLOPs
+                   all        272        822      0.817      0.749      0.825      0.453
