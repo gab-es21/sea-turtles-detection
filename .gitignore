@@ -1,4 +1,6 @@
 .venv
+test-env
+
 .zip
 
 .env

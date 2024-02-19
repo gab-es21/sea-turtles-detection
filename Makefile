@@ -7,6 +7,9 @@ SHELL := /bin/bash
 act:
 	source .venv/Scripts/activate
 
+act_test:
+	source test-env/Scripts/activate
+
 deact:
 	deactivate
 
