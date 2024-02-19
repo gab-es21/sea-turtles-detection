@@ -7,8 +7,8 @@ mode: train  # (str) YOLO mode, i.e. train, val, predict, export, track, benchma
 # Train settings -------------------------------------------------------------------------------------------------------
 model: 'yolov8n.pt' # (str, optional) path to model file, i.e. yolov8n.pt, yolov8n.yaml
 data: 'C:\Users\gaby3\Documents\sea-turtles-detection\yolov8_local\sea-turtles-1\data.yaml' # (str, optional) path to data file, i.e. coco128.yaml
-epochs: 30  # (int) number of epochs to train for
-patience: 10  # (int) epochs to wait for no observable improvement for early stopping of training
+epochs: 2  # (int) number of epochs to train for
+patience: 30  # (int) epochs to wait for no observable improvement for early stopping of training
 batch: 16  # (int) number of images per batch (-1 for AutoBatch)
 imgsz: 800  # (int | list) input images size as int for train and val modes, or list[w,h] for predict and export modes
 save: True  # (bool) save train checkpoints and predict results
@@ -20,7 +20,7 @@ project:  # (str, optional) project name
 name:  # (str, optional) experiment name, results saved to 'project/name' directory
 exist_ok: False  # (bool) whether to overwrite existing experiment
 pretrained: True  # (bool | str) whether to use a pretrained model (bool) or a model to load weights from (str)
-optimizer: auto  # (str) optimizer to use, choices=[SGD, Adam, Adamax, AdamW, NAdam, RAdam, RMSProp, auto]
+#optimizer: auto  # (str) optimizer to use, choices=[SGD, Adam, Adamax, AdamW, NAdam, RAdam, RMSProp, auto]
 verbose: True  # (bool) whether to print verbose output
 seed: 0  # (int) random seed for reproducibility
 deterministic: True  # (bool) whether to enable deterministic mode
@@ -81,35 +81,6 @@ simplify: False  # (bool) ONNX: simplify model
 opset:  # (int, optional) ONNX: opset version
 workspace: 4  # (int) TensorRT: workspace size (GB)
 nms: False  # (bool) CoreML: add NMS
-
-# Hyperparameters ------------------------------------------------------------------------------------------------------
-lr0: 0.01  # (float) initial learning rate (i.e. SGD=1E-2, Adam=1E-3)
-lrf: 0.01  # (float) final learning rate (lr0 * lrf)
-momentum: 0.937  # (float) SGD momentum/Adam beta1
-weight_decay: 0.0005  # (float) optimizer weight decay 5e-4
-warmup_epochs: 3.0  # (float) warmup epochs (fractions ok)
-warmup_momentum: 0.8  # (float) warmup initial momentum
-warmup_bias_lr: 0.1  # (float) warmup initial bias lr
-box: 7.5  # (float) box loss gain
-cls: 0.5  # (float) cls loss gain (scale with pixels)
-dfl: 1.5  # (float) dfl loss gain
-pose: 12.0  # (float) pose loss gain
-kobj: 1.0  # (float) keypoint obj loss gain
-label_smoothing: 0.0  # (float) label smoothing (fraction)
-nbs: 64  # (int) nominal batch size
-hsv_h: 0.015  # (float) image HSV-Hue augmentation (fraction)
-hsv_s: 0.7  # (float) image HSV-Saturation augmentation (fraction)
-hsv_v: 0.5  # (float) image HSV-Value augmentation (fraction)
-degrees: 45.0  # (float) image rotation (+/- deg)
-translate: 0.5  # (float) image translation (+/- fraction)
-scale: 0.2  # (float) image scale (+/- gain)
-shear: 2.0  # (float) image shear (+/- deg)
-perspective: 0.0  # (float) image perspective (+/- fraction), range 0-0.001
-flipud: 0.5  # (float) image flip up-down (probability)
-fliplr: 0.5  # (float) image flip left-right (probability)
-mosaic: 0.5  # (float) image mosaic (probability)
-mixup: 0.5  # (float) image mixup (probability)
-copy_paste: 0.0  # (float) segment copy-paste (probability)
 
 # Custom config.yaml ---------------------------------------------------------------------------------------------------
 cfg:  # (str, optional) for overriding defaults.yaml
