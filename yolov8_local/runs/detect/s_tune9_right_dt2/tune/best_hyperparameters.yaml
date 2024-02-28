@@ -1,0 +1,29 @@
+# 50/50 iterations complete ✅ (53030.78s)
+# Results saved to c:\Users\gaby3\Documents\sea-turtles-detection\runs\detect\tune
+# Best fitness=0.25258 observed at iteration 5
+# Best fitness metrics are {'metrics/precision(B)': 0.45833, 'metrics/recall(B)': 0.36667, 'metrics/mAP50(B)': 0.39699, 'metrics/mAP50-95(B)': 0.23653, 'val/box_loss': 0.10544, 'val/cls_loss': 0.27325, 'val/dfl_loss': 0.03584, 'fitness': 0.25258}
+# Best fitness model is c:\Users\gaby3\Documents\sea-turtles-detection\runs\detect\train5
+# Best fitness hyperparameters are printed below.
+
+lr0: 0.01385
+lrf: 0.0102
+momentum: 0.98
+weight_decay: 0.00046
+warmup_epochs: 3.21137
+warmup_momentum: 0.66101
+box: 7.21188
+cls: 0.55834
+dfl: 1.08515
+hsv_h: 0.01595
+hsv_s: 0.77658
+hsv_v: 0.40107
+degrees: 0.0
+translate: 0.11288
+scale: 0.44179
+shear: 0.0
+perspective: 0.0
+flipud: 0.0
+fliplr: 0.5742
+mosaic: 1.0
+mixup: 0.0
+copy_paste: 0.0
