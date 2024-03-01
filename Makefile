@@ -1,4 +1,4 @@
-include .env
+include ./yolov8_local/yolov8.env
 export
 
 SHELL := /bin/bash
