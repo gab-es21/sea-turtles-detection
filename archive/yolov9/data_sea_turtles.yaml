@@ -1,0 +1,11 @@
+# YOLOv9 dataset config (absolute path, safest)
+
+path: C:/Users/gaby3/Documents/sea-turtles-detection/Dataset/sea-turtles-1
+
+train: train/images
+val: valid/images
+test: test/images
+
+nc: 1
+names:
+  0: Turtle

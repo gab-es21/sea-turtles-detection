@@ -6,7 +6,17 @@ test-env
 .env
 yolov8.env
 yolov5.env
-*/sea-turtles*
+
+
+**/Sea-Turtles-Model-6/**
+**/sea-turtles/**
+**/sea-turtles-1/**
+
 
 */.cometml-runs
 .cometml-runs
+
+*/venv*
+*/.venv*
+**/venv**
+**/.venv**
