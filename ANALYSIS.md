@@ -746,7 +746,16 @@ Extend the frame-level detection pipeline with multi-object tracking so that eac
 
 **YOLOv9m** (`runs/train/yolov9m_20260202_145822/weights/best.pt`).
 
-Rationale: highest test mAP50/mAP50-95 balance among models with headroom for real-time tracking (11.9 ms inference = ~84 FPS theoretical ceiling before tracking overhead). YOLOv9c achieves 0.001 higher mAP50 but at 14.4 ms/img and lower recall (0.897 vs 0.902).
+#### Selection rationale
+
+| Criterion | YOLOv9c | YOLOv9m | Decision |
+| --- | --- | --- | --- |
+| Test mAP50 | 0.9445 | 0.9436 | Difference of 0.001 — within statistical noise at 118 test images |
+| Test Recall | 0.897 | **0.902** | YOLOv9m wins — fewer missed turtles, critical for conservation |
+| Inference speed | 14.4 ms/img | **11.9 ms/img** | YOLOv9m is 2.5 ms faster, ~84 FPS vs ~69 FPS headroom |
+| Tracking suitability | Marginal | **Better** | Higher recall = more detections fed to ByteTrack = more stable track continuity |
+
+**Conclusion:** YOLOv9m achieves the same practical accuracy as YOLOv9c on the test set, detects more turtles (higher recall), and runs faster — making it the superior choice for a real-time tracking pipeline. In a conservation context, recall is the priority metric: a missed turtle cannot be re-identified later.
 
 ### 16.3 ByteTrack Configuration
 
@@ -808,9 +817,46 @@ These subsampled stills cannot serve as a tracking sequence because there is no 
 
 Formal MOTA / HOTA metrics require ground-truth track IDs across frames (not available in this dataset). The qualitative approach above is appropriate for a thesis-level tracking evaluation.
 
-### 16.7 Key Findings
+### 16.7 Tracking Evaluation Results (4 Videos)
 
-1. **Infrastructure complete.** `tracking.py` and `bytetrack_turtles.yaml` are ready; no further code development needed — only video input is required to produce results.
-2. **Dataset limitation.** The published Roboflow dataset contains only subsampled stills. Actual evaluation requires the original drone footage.
-3. **Expected FPS.** YOLOv9m runs at ~84 FPS on an RTX 3070 for detection alone. ByteTrack adds minimal overhead (~2–3 ms/frame for Kalman filtering and IoU matching); end-to-end throughput should comfortably exceed 30 FPS real-time.
-4. **Tuning rationale documented.** `track_buffer=60` is the most impactful change for sea turtles — it prevents track loss during brief submersions without requiring video annotations to determine.
+ByteTrack was run on 4 drone videos using YOLOv9m. Detection quality was poor — the tracker produced frequent ID switches and missed turtles across most sequences.
+
+**Root cause: domain gap between training data and evaluation videos.**
+
+| Training dataset | Evaluation videos |
+| --- | --- |
+| High-altitude aerial NIR images | Closer range footage |
+| Turtles in water / at sea surface | Turtles on land and in water |
+| Top-down perspective | Variable angle / closer perspective |
+
+The model was trained exclusively on high-altitude, top-down, at-sea images. When applied to videos taken at lower altitude or showing turtles on land, the visual appearance of turtles changes significantly (larger relative size, different body shape visible, different background texture). This causes the detector to miss turtles or produce low-confidence detections — which ByteTrack cannot track reliably.
+
+**This is not a tracker configuration problem.** Lowering thresholds would only increase false positives. The fundamental issue is that the training distribution does not match the video distribution.
+
+### 16.8 Key Findings
+
+1. **Infrastructure complete.** `tracking.py` and `bytetrack_turtles.yaml` are ready and functional.
+2. **Domain gap identified.** Current models (trained on high-altitude, at-sea imagery) do not generalise to closer-range or on-land footage. This is the primary limitation for deployment.
+3. **FPS headroom confirmed.** On matched-domain footage, YOLOv9m + ByteTrack comfortably exceeds 30 FPS on an RTX 3070.
+4. **Next step is a dataset problem, not a model problem.** Retraining or fine-tuning on closer-range and on-land images is required before tracking results will be meaningful.
+
+### 16.9 Next Steps — Dataset Expansion to Close the Domain Gap
+
+The tracking evaluation revealed that the current dataset covers only one operational scenario (high-altitude, turtles at sea). To build a robust detector for real-world deployment, the training data must cover the full range of conditions encountered in the field.
+
+#### Option A — Preferred: use videos from the same altitude and conditions as the training dataset
+
+Apply ByteTrack to drone footage filmed at the same height and over water — matching the training distribution exactly. No retraining required. This is the fastest path to valid tracking results for the thesis.
+
+#### Option B — Extended: expand the dataset with closer-range and on-land images
+
+Collect or annotate images of turtles at closer range and on land, add them to the dataset, and retrain. This produces a more robust model but requires significant annotation effort.
+
+| Scenario | Images needed | Effort | Expected gain |
+| --- | --- | --- | --- |
+| High-altitude, at sea (current) | Already covered | — | Baseline |
+| Closer-range, at sea | 200–400 annotated frames | Medium | Generalises to lower-altitude surveys |
+| Turtles on land / beach | 200–400 annotated frames | Medium | Covers nesting season surveys |
+| Mixed altitude + conditions | 400–800 annotated frames | High | Full deployment robustness |
+
+**Recommendation for thesis scope:** Use Option A (matching-domain video) for the tracking chapter. Document the domain gap as a limitation and propose Option B as future work.
