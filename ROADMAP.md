@@ -54,6 +54,8 @@ Is real-time speed a hard constraint (≥ 25 FPS)?
 
 > Completed 2026-03-07. Scripts: `yolo_ultralytics_benchmark/scripts/tracking.py` and `bytetrack_turtles.yaml`
 > Model selected: YOLOv9m (best test mAP50/mAP50-95 balance, 11.9 ms/img, ~84 FPS end-to-end headroom)
+>
+> **Tracking evaluation on 4 videos revealed a domain gap:** models trained on high-altitude, at-sea imagery do not generalise to closer-range or on-land footage. See ANALYSIS.md Section 16.7–16.9.
 
 ---
 
@@ -149,7 +151,26 @@ print(f"End-to-end FPS: {fps:.1f}")
 
 ---
 
-## Phase 5 — Hyperparameter Tuning (Priority: LOW / Optional) `~20–75 hours`
+## Phase 5 — Dataset Expansion to Close Domain Gap (Priority: HIGH)
+
+**Finding:** ByteTrack evaluation on 4 videos revealed that the current model (trained on high-altitude, at-sea NIR imagery) does not generalise to closer-range footage or turtles on land. This is the primary blocker for real-world deployment.
+
+**Two paths:**
+
+**Option A — Fastest (recommended for thesis):** Source drone video filmed at the same altitude and over water as the training dataset. Run `tracking.py` on that footage — no retraining needed. Document the domain gap as a known limitation.
+
+**Option B — Full fix:** Expand the dataset with annotated images from the missing scenarios and retrain.
+
+| Scenario missing from training | Images needed | Effort |
+| --- | --- | --- |
+| Closer-range aerial, turtles at sea | 200–400 frames | Medium |
+| Turtles on land / beach | 200–400 frames | Medium |
+
+**Recommendation:** Pursue Option A for thesis submission. Propose Option B as future work.
+
+---
+
+## Phase 6 — Hyperparameter Tuning (Priority: LOW / Optional) `~20–75 hours`
 
 **Context**: Previous archive tuning experiments did not improve over Ultralytics defaults. Given that the benchmark results (mAP50 > 0.955 for YOLOv9c) are already strong, tuning is unlikely to yield meaningful gains for this dataset.
 
@@ -176,9 +197,11 @@ Phase 1+2  →  Phase 3  →  Phase 4  →  Phase 5 (only if needed)
 - [x] Phase 3: Select final model for ByteTrack (YOLOv9m)
 - [x] Phase 4a: Create `bytetrack_turtles.yaml` with tuned parameters
 - [x] Phase 4b: Create `tracking.py` — runs ByteTrack on video or image folder, saves annotated output and `tracking_stats.txt`
-- [ ] Phase 4c: Run tracker on actual video/sequence and record FPS, qualitative ID-switch analysis
-- [ ] Phase 5: (optional) Tune top-1 or top-2 models if gap found
+- [x] Phase 4c: Run tracker on 4 videos — domain gap identified (see ANALYSIS.md 16.7)
+- [ ] Phase 5a: Source matching-domain video (high-altitude, turtles at sea) for valid tracking evaluation
+- [ ] Phase 5b (optional): Expand dataset with closer-range / on-land images and retrain
+- [ ] Phase 6: (optional) Tune top-1 or top-2 models if gap found
 
 ---
 
-Roadmap updated: 2026-03-07 (Phase 4 infra complete)
+Roadmap updated: 2026-03-07 (Phase 4 done; domain gap identified; Phase 5 next)
