@@ -16,7 +16,7 @@ roboflow:
   version: 6
   workspace: gabriel-esteves
 
-# Paths are relative to this file's location (set by benchmark script via abspath)
-train: ../../archive/03_yolov8_local/Sea-Turtles-Model-6/train/images
-val: ../../archive/03_yolov8_local/Sea-Turtles-Model-6/valid/images
-test: ../../archive/03_yolov8_local/Sea-Turtles-Model-6/test/images
+# Paths are relative to this file's location
+train: train/images
+val: valid/images
+test: test/images
