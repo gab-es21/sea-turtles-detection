@@ -1,3 +1,6 @@
+# Claude Code local settings
+.claude/
+
 # Python environments
 .venv/
 venv/
