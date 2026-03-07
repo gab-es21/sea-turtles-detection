@@ -43,6 +43,12 @@ __pycache__/
 .ipynb_checkpoints/
 **/.ipynb_checkpoints/
 
+# Video files
+*.mp4
+*.avi
+*.mov
+*.mkv
+
 # Misc generated files
 tree.txt
 *.log

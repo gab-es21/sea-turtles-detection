@@ -14,3 +14,4 @@ new_track_thresh: 0.50    # default 0.6  — start new track faster
 track_buffer: 60          # default 30   — frames to keep track alive (2 s @ 30 FPS)
 match_thresh: 0.80        # default 0.8  — IoU threshold for track association
 frame_rate: 30            # set to match actual video FPS
+fuse_score: True          # required by newer ultralytics — fuse detection score into track cost
