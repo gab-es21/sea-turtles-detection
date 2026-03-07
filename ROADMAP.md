@@ -50,7 +50,14 @@ Is real-time speed a hard constraint (≥ 25 FPS)?
 
 ---
 
-## Phase 4 — ByteTrack Integration (Priority: HIGH) `~4–6 hours`
+## Phase 4 — ByteTrack Integration — DONE ✓
+
+> Completed 2026-03-07. Scripts: `yolo_ultralytics_benchmark/scripts/tracking.py` and `bytetrack_turtles.yaml`
+> Model selected: YOLOv9m (best test mAP50/mAP50-95 balance, 11.9 ms/img, ~84 FPS end-to-end headroom)
+
+---
+
+## ~~Phase 4 — ByteTrack Integration (Priority: HIGH) `~4–6 hours`~~
 
 **Why**: Detection alone identifies turtles frame by frame. Tracking assigns a **persistent ID** to each individual across frames — essential for population counting and re-identification in video surveys.
 
@@ -166,12 +173,12 @@ Phase 1+2  →  Phase 3  →  Phase 4  →  Phase 5 (only if needed)
 - [x] Phase 1: Run `model.val(split='test')` for all 16 models
 - [x] Phase 1: Save test-set metrics to `yolo_ultralytics_benchmark/results/test_results.csv`
 - [x] Phase 2: Record inference ms/image per model (from Phase 1 output)
-- [ ] Phase 3: Select final model for ByteTrack
-- [ ] Phase 4a: Run `yolo track` with ByteTrack on video/sequence
-- [ ] Phase 4b: Create `bytetrack_turtles.yaml` with tuned parameters
-- [ ] Phase 4c: Record FPS, qualitative ID-switch analysis
+- [x] Phase 3: Select final model for ByteTrack (YOLOv9m)
+- [x] Phase 4a: Create `bytetrack_turtles.yaml` with tuned parameters
+- [x] Phase 4b: Create `tracking.py` — runs ByteTrack on video or image folder, saves annotated output and `tracking_stats.txt`
+- [ ] Phase 4c: Run tracker on actual video/sequence and record FPS, qualitative ID-switch analysis
 - [ ] Phase 5: (optional) Tune top-1 or top-2 models if gap found
 
 ---
 
-*Roadmap updated: 2026-03-07*
+Roadmap updated: 2026-03-07 (Phase 4 infra complete)
