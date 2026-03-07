@@ -47,6 +47,7 @@ __pycache__/
 *.mp4
 *.mov
 *.mkv
+*.avi
 
 # Misc generated files
 tree.txt
