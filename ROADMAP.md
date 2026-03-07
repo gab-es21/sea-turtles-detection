@@ -1,154 +1,177 @@
 # Project Roadmap — Remaining Technical Work
 
 > Current state: 16 models trained for 100 epochs on Dataset 1 (val split metrics only).
+> Scope: `yolo_ultralytics_benchmark/` only.
 > Goal: Complete the experimental pipeline for thesis submission.
 
 ---
 
-## Phase 1 — Proper Test Set Evaluation (Priority: CRITICAL)
+## Phase 1 — Test Set Evaluation — DONE ✓
 
-**Why**: All current metrics come from the **validation split** (272 images). The **test split** (118 images) has never been evaluated. A thesis must report results on held-out test data — otherwise the reported numbers are optimistic.
+> Completed 2026-03-07. Results: `yolo_ultralytics_benchmark/results/test_results.csv`
+> Script: `yolo_ultralytics_benchmark/scripts/test_evaluation.py`
+
+---
+
+## ~~Phase 1 — Test Set Evaluation (Priority: CRITICAL) `~1 hour`~~
+
+**Why**: All current metrics come from the **validation split** (272 images). The **test split** (118 images) is held-out data that the models have never seen. A thesis must report results on the test set — val-set numbers are considered optimistic.
 
 **What to do**: Run `model.val(split='test')` for all 16 `best.pt` checkpoints.
 
-**Expected output**: mAP50, mAP50-95, Precision, Recall on test set — comparable table to the current one.
+**Output**: mAP50, mAP50-95, Precision, Recall, Speed (ms/image) on the test set — a direct counterpart to the existing benchmark table.
 
-**Effort**: Low — the trained weights already exist; this is purely an evaluation pass.
+> Speed (ms/image) comes for free from `model.val()` output — covers Phase 2 simultaneously.
 
 ---
 
-## Phase 2 — Inference Speed Measurement (Priority: HIGH)
+## Phase 2 — Inference Speed (included in Phase 1) `~0 extra hours`
 
-**Why**: For a real deployment (drone-side processing or field laptop), knowing the latency per frame is essential. Currently only training time is reported.
+Ultralytics prints `Speed: X ms preprocess / Y ms inference / Z ms postprocess` at the end of every `val` call. Record the **inference ms/image** for each of the 16 models from the Phase 1 runs.
 
-**What to do**: For each of the 16 models, measure average inference time on the test set.
+This enables an **accuracy vs latency** plot for the thesis.
 
-```bash
-yolo val model=<model>/best.pt data=Dataset/sea-turtles-1/data.yaml split=test
-# or
-python -c "from ultralytics import YOLO; m=YOLO('best.pt'); m.val(data='...', split='test')"
+---
+
+## Phase 3 — Choose the Best Model `~0 hours`
+
+After Phase 1, pick the final model using this decision tree:
+
+```text
+Is recall the priority?  (conservation → every missed turtle matters)
+    YES → YOLO11m  (expected highest recall)
+
+Is a single strongest model needed regardless of speed?
+    YES → YOLOv9c  (expected highest mAP50)
+
+Is real-time speed a hard constraint (≥ 25 FPS)?
+    YES → compare Phase 2 results; if YOLOv9c is too slow, use YOLOv8m or YOLO11m
 ```
 
-Ultralytics reports `Speed: preprocess / inference / postprocess ms/image` in the val output.
-
-**Expected output**: Inference time (ms/image) per model — enables a proper accuracy vs latency trade-off plot.
-
-**Effort**: Low — same as Phase 1, just read the speed line from output.
-
 ---
 
-## Phase 3 — Hyperparameter Tuning on Top-3 Models (Priority: MEDIUM)
+## Phase 4 — ByteTrack Integration (Priority: HIGH) `~4–6 hours`
 
-**Why**: Previous tuning (archive) used short trials (~25–50 epochs per iteration). A properly configured tuning run at 100 epochs/trial may still improve results marginally. Given the near-saturation of mAP50, the main benefit would be for **recall** on the test set.
+**Why**: Detection alone identifies turtles frame by frame. Tracking assigns a **persistent ID** to each individual across frames — essential for population counting and re-identification in video surveys.
 
-**Recommended candidates**: YOLOv9c, YOLO11m (highest recall), YOLO26m (best localisation).
+### 4.1 — Do we need video annotations?
 
-**What to do**:
-```python
-model = YOLO("yolov9c.pt")
-model.tune(
-    data="Dataset/sea-turtles-1/data.yaml",
-    epochs=100,
-    iterations=50,
-    imgsz=640,
-    batch=8,
-    seed=42,
-    device=0,
-)
-```
+**Short answer: No, not for a first working implementation.**
 
-**Key lesson from archive**: Previous tuning did not beat defaults. Only worth doing if there is time — do not block Phase 4 on this.
+Here is the distinction:
 
-**Expected output**: Possibly +0.005–0.010 mAP50 gain; more likely a confirmation that defaults are near-optimal.
+| Goal | Needs video GT annotations? | What the existing annotations give |
+| --- | --- | --- |
+| Run ByteTrack and visualise results | **No** | Enough — use images as a sequence or run on raw video |
+| Measure FPS, ID-switch count (visual) | **No** | Count switches manually by inspecting output video |
+| Compute MOTA / HOTA formally | **Yes** | Existing per-image bbox annotations have **no track IDs**, so MOTA/HOTA cannot be computed from them |
 
-**Effort**: High (50 iterations × ~90 min each = ~75 hours per model). Reduce to 20 iterations if time-constrained.
+**Why can't the existing image annotations be used for MOTA/HOTA?**
+The dataset has one `.txt` label per image with bounding boxes, but there is no link between "box #2 in frame 10" and "box #1 in frame 11" — i.e., no track IDs across frames. MOTA and HOTA require ground-truth track IDs to count ID switches correctly.
 
----
+**Practical approach for thesis (no video GT needed):**
 
-## Phase 4 — ByteTrack Integration (Priority: HIGH)
+1. Run ByteTrack on a drone video or image sequence from the dataset.
+2. Record output video with overlaid track IDs.
+3. Visually count ID switches and track losses.
+4. Measure end-to-end FPS.
+5. Report qualitative results + FPS as the tracking evaluation.
 
-**Why**: The end application is tracking individual turtles across video frames (population monitoring). Detection alone is not sufficient — we need persistent IDs per individual.
+If formal MOTA/HOTA is required, video sequences would need to be annotated with consistent track IDs across frames — that is a separate annotation effort.
 
-**Model to use**: Best model from Phase 1 test evaluation. Expected to be **YOLOv9c** (highest mAP50) or **YOLO11m** (highest recall — fewer missed = fewer ID losses).
+### 4.2 — Step-by-step
 
-### Step 4a — Basic tracking test
+#### Step 1: Run tracking on a video or image folder
 
 ```bash
 yolo track \
   model=yolo_ultralytics_benchmark/models/yolov9c.pt \
-  source=<path_to_video_or_image_sequence> \
+  source=<path_to_video_or_folder_of_frames> \
   tracker=bytetrack.yaml \
   conf=0.3 \
   iou=0.5 \
-  save=True
+  save=True \
+  project=runs/track \
+  name=yolov9c_bytetrack
 ```
 
-### Step 4b — ByteTrack parameter tuning
+#### Step 2: Tune ByteTrack parameters
 
-Key parameters to sweep (edit `.venv/Lib/site-packages/ultralytics/cfg/trackers/bytetrack.yaml`):
+Copy the default tracker config and adjust for the sea turtle use case:
 
-| Parameter | Default | Suggested range | Effect |
+```bash
+cp .venv/Lib/site-packages/ultralytics/cfg/trackers/bytetrack.yaml bytetrack_turtles.yaml
+```
+
+Key parameters:
+
+| Parameter | Default | Recommended | Reason |
 |---|---|---|---|
-| `track_high_thresh` | 0.5 | 0.3 – 0.6 | Min confidence for primary association |
-| `track_low_thresh` | 0.1 | 0.05 – 0.2 | Min confidence for secondary association |
-| `new_track_thresh` | 0.6 | 0.4 – 0.7 | Min confidence to initialise new track |
-| `track_buffer` | 30 | 30 – 90 | Frames to keep lost track alive (for submersion) |
-| `match_thresh` | 0.8 | 0.7 – 0.9 | IoU threshold for track-detection matching |
+| `track_high_thresh` | 0.5 | 0.35 | Accept slightly lower-confidence detections into tracks |
+| `track_low_thresh` | 0.1 | 0.1 | Keep default |
+| `new_track_thresh` | 0.6 | 0.5 | Lower threshold to start new track faster |
+| `track_buffer` | 30 | 60–90 | Turtles can submerge briefly; keep track alive for 2–3 s at 30 FPS |
+| `match_thresh` | 0.8 | 0.8 | Keep default; aerial view = consistent appearance |
+| `frame_rate` | 30 | match your video FPS | Affects Kalman filter timing |
 
-For sea turtles that can submerge and reappear, **increase `track_buffer`** (e.g., 60–90 frames at 25 FPS = 2.4–3.6 s of memory).
+#### Step 3: Measure FPS
 
-### Step 4c — Metrics to measure
+```python
+from ultralytics import YOLO
+import time
 
-| Metric | Description |
-|---|---|
-| MOTA | Multi-Object Tracking Accuracy |
-| HOTA | Higher Order Tracking Accuracy |
-| ID switches (IDSW) | Times a turtle's ID changes |
-| Track fragmentation | How often a track is interrupted |
-| End-to-end FPS | Detection + tracking throughput |
+model = YOLO("yolo_ultralytics_benchmark/models/yolov9c.pt")
+results = model.track(source="<video>", tracker="bytetrack_turtles.yaml", stream=True)
 
-**Effort**: Medium — requires annotated video sequences (ground-truth tracks) for MOTA/HOTA. If no GT video annotations exist, qualitative visual inspection of tracked output is the fallback.
+t0 = time.time()
+for i, r in enumerate(results):
+    pass
+fps = i / (time.time() - t0)
+print(f"End-to-end FPS: {fps:.1f}")
+```
+
+#### Step 4: Record what to report in thesis
+
+| Metric | How to measure |
+| --- | --- |
+| End-to-end FPS | Step 3 above |
+| Number of unique track IDs | `len(set of IDs seen in output)` |
+| Visual ID switches | Inspect output video; count moments when a turtle's ID changes |
+| Track loss on submersion | Note sequences where a turtle disappears and check if same ID is recovered |
+| Confidence distribution of tracked detections | Check output `.txt` files |
 
 ---
 
-## Summary Roadmap
+## Phase 5 — Hyperparameter Tuning (Priority: LOW / Optional) `~20–75 hours`
 
-```
-Phase 1 — Test set evaluation       [~1 hour]    CRITICAL
-Phase 2 — Inference speed           [~1 hour]    HIGH
-Phase 3 — Hyperparameter tuning     [~75 hours]  MEDIUM (optional)
-Phase 4a — ByteTrack basic test     [~2 hours]   HIGH
-Phase 4b — ByteTrack param tuning   [~4 hours]   MEDIUM
-Phase 4c — Tracking metrics         [depends on GT annotations]
-```
+**Context**: Previous archive tuning experiments did not improve over Ultralytics defaults. Given that the benchmark results (mAP50 > 0.955 for YOLOv9c) are already strong, tuning is unlikely to yield meaningful gains for this dataset.
 
-### Recommended execution order
+Only recommended if Phase 1 reveals a **gap > 0.010 mAP50** between val and test results (sign of overfitting to val), which would justify retraining with adjusted augmentation.
 
-```
-Phase 1 → Phase 2 → Phase 4a → Phase 4b → Phase 3 (if time allows)
-```
+**Candidates if pursued**: YOLOv9c, YOLO11m.
 
-Run Phases 1 and 2 first because they are fast and complete the evaluation of existing work.
-Start Phase 4 (ByteTrack) as soon as the best model is confirmed from Phase 1.
-Only invest in Phase 3 (tuning) if the Phase 1 results reveal a clear gap to close.
+**Effort**: ~20 iterations × ~90 min = ~30 hours per model. High cost, low expected return.
 
 ---
 
-## Decision Tree — Choosing the Final Model for ByteTrack
+## Execution Order
 
 ```
-Phase 1 test results available?
-    |
-    ├─ YOLOv9c still best mAP50 on test set?
-    │       └─ YES → use YOLOv9c for tracking
-    │
-    ├─ Is recall the priority? (conservation = minimise missed turtles)
-    │       └─ YES → use YOLO11m (highest recall)
-    │
-    └─ Is real-time FPS a hard constraint?
-            └─ YES → check Phase 2 results; if YOLOv9c < 25 FPS, fall back to YOLOv8m or YOLO11m
+Phase 1+2  →  Phase 3  →  Phase 4  →  Phase 5 (only if needed)
+ ~1 hour      instant      ~4–6 h       optional
 ```
+
+## Milestone Checklist
+
+- [x] Phase 1: Run `model.val(split='test')` for all 16 models
+- [x] Phase 1: Save test-set metrics to `yolo_ultralytics_benchmark/results/test_results.csv`
+- [x] Phase 2: Record inference ms/image per model (from Phase 1 output)
+- [ ] Phase 3: Select final model for ByteTrack
+- [ ] Phase 4a: Run `yolo track` with ByteTrack on video/sequence
+- [ ] Phase 4b: Create `bytetrack_turtles.yaml` with tuned parameters
+- [ ] Phase 4c: Record FPS, qualitative ID-switch analysis
+- [ ] Phase 5: (optional) Tune top-1 or top-2 models if gap found
 
 ---
 
-*Roadmap created: 2026-03-07*
+*Roadmap updated: 2026-03-07*

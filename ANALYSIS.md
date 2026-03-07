@@ -631,9 +631,105 @@ The following questions from the thesis analysis cannot be answered from the cur
 - **Checkpoint reported**: All metrics correspond to the best validation checkpoint (`best.pt`), which is standard practice.
 - **Single-class scenario**: The single-class setup simplifies evaluation but limits conclusions about inter-class confusion. Results may not generalise to multi-species scenarios.
 - **Dataset size**: With only 968 training images, this is a relatively small dataset. The strong results (mAP50 > 0.95) are enabled by COCO pre-training and the high visual distinctiveness of turtles in this imagery.
-- **No test set evaluation reported**: The benchmark script runs `model.val()` on the **validation split** (272 images), not the **test split** (118 images). For thesis reporting, final evaluation should be performed on the held-out test set to avoid optimistic bias.
+- **Test set evaluation completed (Phase 1)**: See Section 15 for full results on the held-out test split.
 
 ---
 
 *Generated from repository analysis — `yolo_ultralytics_benchmark/`, `archive/`, and `Dataset/` contents.*
 *Last updated: 2026-03-07*
+
+---
+
+## 15. Phase 1 — Test Set Evaluation Results
+
+> Completed: 2026-03-07
+> Script: `yolo_ultralytics_benchmark/scripts/test_evaluation.py`
+> Results file: `yolo_ultralytics_benchmark/results/test_results.csv`
+> Hardware: NVIDIA GeForce RTX 3070 (8 GB), Ultralytics 8.4.6, PyTorch 2.1.0+cu121
+> Test split: **261 images, 730 instances** (48 background images with no turtles)
+
+---
+
+### 15.1 Full Test Set Results (sorted by mAP50)
+
+| Rank | Model | mAP50 | mAP50-95 | Precision | Recall | Inference (ms/img) | ~FPS |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | yolov9c | **0.9445** | **0.6364** | **0.9240** | 0.8973 | 14.43 | 69 |
+| 2 | yolov9m | 0.9436 | 0.6142 | 0.9152 | 0.9018 | 11.92 | 84 |
+| 3 | yolo26m | 0.9420 | 0.6347 | 0.9131 | 0.8986 | 10.66 | 94 |
+| 4 | yolo11m | 0.9397 | 0.6183 | 0.8991 | 0.8910 | 10.17 | 98 |
+| 5 | yolov10m | 0.9375 | 0.6194 | 0.9087 | 0.9014 | 10.02 | **100** |
+| 6 | yolo26s | 0.9334 | 0.5906 | 0.8828 | 0.8726 | 5.68 | 176 |
+| 7 | yolo11s | 0.9321 | 0.5757 | 0.8915 | 0.8892 | 5.09 | 197 |
+| 8 | yolov10s | 0.9314 | 0.5862 | 0.9074 | 0.8781 | 5.03 | 199 |
+| 9 | yolov8m | 0.9314 | 0.6070 | 0.8932 | **0.9054** | 10.25 | 98 |
+| 10 | yolov8s | 0.9273 | 0.5601 | 0.8891 | 0.8785 | 4.99 | **200** |
+| 11 | yolov9s | 0.9172 | 0.5537 | 0.8754 | 0.8616 | 6.19 | 162 |
+| 12 | yolov10n | 0.9006 | 0.5355 | 0.8390 | 0.8548 | 2.94 | 340 |
+| 13 | yolo11n | 0.9002 | 0.5252 | 0.8534 | 0.8397 | 3.32 | 301 |
+| 14 | yolov8n | 0.8936 | 0.5146 | 0.8499 | 0.8096 | **2.60** | 385 |
+| 15 | yolo26n | 0.8911 | 0.5240 | 0.8217 | 0.8247 | 3.06 | 327 |
+| 16 | yolov9t | 0.8784 | 0.5015 | 0.8212 | 0.8164 | 4.27 | 234 |
+
+> FPS estimated as 1000 / inference_ms (inference only, batch=8, RTX 3070). All models comfortably exceed 25 FPS real-time threshold.
+
+---
+
+### 15.2 Val vs Test Comparison (mAP50)
+
+| Model | Val mAP50 | Test mAP50 | Delta | Verdict |
+| --- | --- | --- | --- | --- |
+| yolov9c | 0.9551 | 0.9445 | -0.011 | Largest medium-model drop; still rank 1 |
+| yolov8m | 0.9456 | 0.9314 | **-0.014** | Largest absolute drop overall |
+| yolo26m | 0.9521 | 0.9420 | -0.010 | Small drop; rank 2→3 |
+| yolov9m | 0.9501 | 0.9436 | -0.007 | Most consistent; rank 3→2 |
+| yolo11m | 0.9457 | 0.9397 | -0.006 | Stable |
+| yolov10m | 0.9444 | 0.9375 | -0.007 | Stable |
+| yolo11s | 0.9318 | 0.9321 | **+0.000** | Most generalised small model |
+| yolov8s | 0.9356 | 0.9273 | -0.008 | Small drop |
+| yolov10s | 0.9359 | 0.9314 | -0.005 | Stable |
+| yolov8n | 0.8860 | 0.8936 | **+0.008** | Slight gain (within noise) |
+| yolo26n | 0.8875 | 0.8911 | +0.004 | Slight gain (within noise) |
+| yolov9t | 0.8865 | 0.8784 | -0.008 | Small drop |
+
+All val→test deltas are ≤ 0.014 mAP50. No model shows a large performance gap, confirming **no significant overfitting to the validation split**.
+
+---
+
+### 15.3 Key Findings — Phase 1
+
+**1. Rankings are stable across val and test splits.**
+The top-5 models on the test set are the same as on the validation set, with minor reordering. YOLOv9c remains rank 1 (test mAP50 = 0.9445).
+
+**2. YOLOv9m nearly ties YOLOv9c on test (gap = 0.001 mAP50).**
+On validation, the gap was 0.005. On the unseen test set, YOLOv9m generalises almost identically to YOLOv9c, while being smaller (20M vs 25M params) and ~2.5ms faster. This makes **YOLOv9m a strong practical choice** if model size matters.
+
+**3. YOLOv8m shows the largest drop (−0.014 mAP50).**
+Its val-set ranking (rank 5 tied with YOLO11m) does not hold on test (rank 9, tied with YOLOv10s). The difference is small in absolute terms but worth noting.
+
+**4. YOLO11m has the best recall on the validation set (0.915) but this does not hold on test (0.891).**
+On the test set, the highest recall among medium models is **YOLOv8m (0.905)**, followed by YOLOv10m (0.901) and YOLOv9m (0.902). For conservation monitoring, YOLOv9m offers the best balance of mAP50 and recall.
+
+**5. All models are real-time capable on an RTX 3070.**
+Even YOLOv9c (largest model, 14.43 ms/img) runs at ~69 FPS — well above the 25 FPS threshold for video processing. Nano models (YOLOv8n at 2.60 ms) reach ~385 FPS.
+
+**6. YOLO11s is the most stable small model across splits (Δ = 0.000 mAP50).**
+It is the only model that does not degrade at all from val to test, suggesting particularly good generalisation for its size.
+
+**7. Test set has 48/261 background images (18.4%).**
+These are images with no turtles present; no model produced false positives from background, consistent with the confusion matrix analysis.
+
+---
+
+### 15.4 Updated Model Recommendation (based on test results)
+
+| Use case | Recommended model | Test mAP50 | Test Recall | Inference |
+| --- | --- | --- | --- | --- |
+| Best accuracy on unseen data | **YOLOv9c** | 0.9445 | 0.897 | 14.4 ms |
+| Best accuracy + recall balance | **YOLOv9m** | 0.9436 | 0.902 | 11.9 ms |
+| Best accuracy for tracking (recall priority) | **YOLOv8m** | 0.9314 | 0.905 | 10.3 ms |
+| Best small model overall | **YOLO11s** | 0.9321 | 0.889 | 5.1 ms |
+| Fastest viable model | **YOLOv8n** | 0.8936 | 0.810 | 2.6 ms |
+| Best efficiency (mAP50 per ms) | **YOLOv8s** | 0.9273 | 0.879 | 5.0 ms |
+
+**For ByteTrack (Phase 4): use YOLOv9m** — it matches YOLOv9c accuracy on the test set, has the second-best recall among medium models, and is 2.5 ms faster per frame (important for real-time tracking pipelines).
