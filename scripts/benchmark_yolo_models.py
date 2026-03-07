@@ -13,7 +13,7 @@ RESULTS_DIR = os.path.join(BASE_DIR, "results")
 RUNS_DIR = os.path.join(BASE_DIR, "runs", "train")
 
 DATA_YAML = os.path.abspath(
-    os.path.join(BASE_DIR, "..", "Dataset", "sea-turtles-1", "data.yaml")
+    os.path.join(BASE_DIR, "Dataset", "sea-turtles-1", "data.yaml")
 )
 
 # ================= TRAIN CONFIG =================
