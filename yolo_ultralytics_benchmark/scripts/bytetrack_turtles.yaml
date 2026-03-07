@@ -1,0 +1,16 @@
+# ByteTrack configuration tuned for sea turtle detection
+# Base: ultralytics/cfg/trackers/bytetrack.yaml
+# Tuning rationale:
+#   - Lower track_high_thresh: aerial NIR imagery has variable confidence scores
+#   - Lower new_track_thresh: faster ID assignment for entering turtles
+#   - Higher track_buffer: turtles submerge briefly; keep track alive 2-3 s at 30 FPS
+#   - match_thresh: keep default — consistent aerial view appearance
+
+tracker_type: bytetrack
+
+track_high_thresh: 0.35   # default 0.5  — accept lower-confidence detections into tracks
+track_low_thresh: 0.10    # default 0.1  — keep default
+new_track_thresh: 0.50    # default 0.6  — start new track faster
+track_buffer: 60          # default 30   — frames to keep track alive (2 s @ 30 FPS)
+match_thresh: 0.80        # default 0.8  — IoU threshold for track association
+frame_rate: 30            # set to match actual video FPS
