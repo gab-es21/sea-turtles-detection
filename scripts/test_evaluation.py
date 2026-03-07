@@ -8,7 +8,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 RUNS_DIR   = BASE_DIR / "runs" / "train"
 RESULTS_DIR = BASE_DIR / "results"
-DATA_YAML  = BASE_DIR.parent / "Dataset" / "sea-turtles-1" / "data.yaml"
+DATA_YAML  = BASE_DIR / "Dataset" / "sea-turtles-1" / "data.yaml"
 
 RESULTS_CSV = RESULTS_DIR / "test_results.csv"
 

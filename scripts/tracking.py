@@ -11,7 +11,7 @@ Usage:
     # Override default model or tracker config:
     python tracking.py --source video.mp4 --weights path/to/best.pt --tracker bytetrack_turtles.yaml
 
-Outputs (saved under yolo_ultralytics_benchmark/results/tracking/<run_name>/):
+Outputs (saved under results/tracking/<run_name>/):
     - annotated video (or frames) with track IDs overlaid
     - tracking_stats.txt  with FPS, unique IDs, per-frame ID counts
 """
@@ -23,7 +23,7 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 WEIGHTS  = BASE_DIR / "runs" / "train" / "yolov9m_20260202_145822" / "weights" / "best.pt"
-TRACKER  = Path(__file__).resolve().parent / "bytetrack_turtles.yaml"
+TRACKER  = BASE_DIR / "configs" / "bytetrack_turtles.yaml"
 OUT_DIR  = BASE_DIR / "results" / "tracking"
 
 
