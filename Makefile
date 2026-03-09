@@ -12,7 +12,7 @@ SCRIPTS := scripts
 VIDEO   := videos/turtle_footage.mp4
 NAME    := yolov9m_bytetrack
 
-.PHONY: help venv install check-models benchmark benchmark-ds2 test-eval track clean-results
+.PHONY: help venv install check-models benchmark benchmark-ds2 retrain-ds2 test-eval track clean-results
 
 # ─────────────────────────────────────────────────────────────────────
 help:
@@ -24,6 +24,7 @@ help:
 	@echo "  make check-models   Validate all 16 pretrained model weights in models/"
 	@echo "  make benchmark      Train all 16 models on Dataset 1 (high-altitude, ~20 h)"
 	@echo "  make benchmark-ds2  Train all 16 models on Dataset 2 (closer-range, ~20 h)"
+	@echo "  make retrain-ds2    Retrain top 3 DS2 models with early stopping (batch=16, patience=50)"
 	@echo "  make test-eval      Run test-set evaluation on all 16 trained models (DS1)"
 	@echo "  make track          Run ByteTrack on a video"
 	@echo "                        VIDEO=<path>  source video (default: $(VIDEO))"
@@ -50,6 +51,9 @@ benchmark:
 
 benchmark-ds2:
 	$(PYTHON) $(SCRIPTS)/benchmark_yolo_models_ds2.py
+
+retrain-ds2:
+	$(PYTHON) $(SCRIPTS)/benchmark_yolo_models_ds2_retrain.py
 
 test-eval:
 	$(PYTHON) $(SCRIPTS)/test_evaluation.py
