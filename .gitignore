@@ -12,6 +12,7 @@ test-env/
 
 # Dataset files (large, downloaded separately)
 **/sea-turtles-1/
+**/sea-turtles-2/
 **/sea-turtles/
 **/Sea-Turtles-Model-6/
 *.zip
