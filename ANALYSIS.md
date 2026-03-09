@@ -1,8 +1,12 @@
 # ANALYSIS — Sea Turtle Detection: Training, Models & Dataset
 
 > Analysis document for Master's thesis.
-> All results refer to the benchmark run executed on **2026-02-02**, training 16 models for 100 epochs on Dataset 1.
-> Source data: `yolo_ultralytics_benchmark/results/benchmark_results.csv`, training curve images in `yolo_ultralytics_benchmark/results/images/`, and archived experiment runs under `archive/`.
+> This document covers **two benchmark experiments** conducted on distinct datasets.
+>
+> - **Experiment 1 (2026-02-02):** 16 YOLO models trained for 100 epochs on Dataset 1 — high-altitude, NIR aerial imagery of sea turtles at sea. Source data: `c:/Users/gaby3/Documents/sea-turtles-detection/results/benchmark_results.csv`, training curve images in `c:/Users/gaby3/Documents/sea-turtles-detection/results/images/`, archived runs under `c:/Users/gaby3/Documents/sea-turtles-detection/archive/`.
+> - **Experiment 2 (2026-03-07, in progress):** Same 16 YOLO models trained for 100 epochs on Dataset 2 — closer-range drone imagery of sea turtles, motivated by the domain gap identified during tracking evaluation. Source data: `c:/Users/gaby3/Documents/sea-turtles-detection/results/ds2/benchmark_results_ds2.csv`, runs under `c:/Users/gaby3/Documents/sea-turtles-detection/runs/train_ds2/`.
+>
+> Sections 1–16 cover Experiment 1. Section 17 covers Experiment 2.
 
 ---
 
@@ -18,16 +22,23 @@
 8. [Model Architecture Comparison](#8-model-architecture-comparison)
 9. [Earlier Experiments & Historical Progression](#9-earlier-experiments--historical-progression)
 10. [Hyperparameter Tuning (Archive)](#10-hyperparameter-tuning-archive)
-11. [Dataset 2 — Tiled Dataset Experiments](#11-dataset-2--tiled-dataset-experiments)
+11. [Dataset 1-Tiled — Tiled Dataset Experiments](#11-dataset-1-tiled--tiled-dataset-experiments)
 12. [Tracking — ByteTrack / BotSort](#12-tracking--bytetrack--botsort)
 13. [Open Questions & Data Gaps](#13-open-questions--data-gaps)
 14. [Key Findings for Thesis](#14-key-findings-for-thesis)
+15. [Phase 1 — Test Set Evaluation Results](#15-phase-1--test-set-evaluation-results)
+16. [Phase 4 — ByteTrack Tracking Integration](#16-phase-4--bytetrack-tracking-integration)
+17. [Experiment 2 — Benchmark on Closer-Range Dataset](#17-experiment-2--benchmark-on-closer-range-dataset)
 
 ---
 
 ## 1. Executive Summary
 
-This project trains and benchmarks 16 YOLO architectures (v8, v9, v10, v11, v26) for single-class detection of sea turtles in NIR drone imagery. All models were trained under identical conditions on the same dataset, enabling a fair architectural comparison.
+This project trains and benchmarks 16 YOLO architectures (v8, v9, v10, v11, v26) for single-class detection of sea turtles in drone imagery across **two independent experiments** on datasets with different altitude and imaging conditions.
+
+### 1.1 Experiment 1 — High-Altitude NIR Imagery (Dataset 1, completed 2026-02-02)
+
+All 16 models trained for 100 epochs on Dataset 1 (968 train images, high-altitude NIR aerial). Full results in Sections 3–16.
 
 **Top-level findings:**
 
@@ -44,6 +55,24 @@ This project trains and benchmarks 16 YOLO architectures (v8, v9, v10, v11, v26)
 
 The mAP50 gap between the weakest (YOLOv8n/v9t, 0.886) and the strongest (YOLOv9c, 0.955) is only 0.069, indicating that all tested architectures are capable on this domain. The critical differentiator for conservation monitoring is **recall** (missed turtles = false negatives), where the range is larger: 0.794 (YOLOv8n) to 0.915 (YOLO11m).
 
+The ByteTrack tracking evaluation (Phase 4) using the best Experiment 1 model (YOLOv9m) on 4 field videos revealed a **domain gap**: models trained on high-altitude at-sea imagery fail on closer-range footage. This motivated Experiment 2.
+
+### 1.2 Experiment 2 — Closer-Range Drone Imagery (Dataset 2, started 2026-03-07, in progress)
+
+Same 16 models trained for 100 epochs on Dataset 2 (2,071 train images, lower-altitude footage). Partial results below; full results pending. See Section 17 for details.
+
+**Partial findings (first 4 models):**
+
+| Finding | Value |
+|---|---|
+| mAP50 range (4 models so far) | 0.386 – 0.533 |
+| Best mAP50 so far | **yolo11n — 0.533** (note: recall anomaly, see Section 17.4) |
+| Best mAP50-95 so far | **yolo11n — 0.346** |
+| Training time range | 95 – 148 min per model |
+| Full results | **PENDING — training in progress** |
+
+**Important note:** the lower mAP50 values in Experiment 2 (relative to Experiment 1) are expected — Dataset 2 is a different, more visually heterogeneous dataset. Direct numerical comparison between experiments is not meaningful; each experiment should be evaluated relative to its own dataset's baseline.
+
 ---
 
 ## 2. Dataset & Annotation
@@ -52,12 +81,13 @@ The mAP50 gap between the weakest (YOLOv8n/v9t, 0.886) and the strongest (YOLOv9
 
 | ID | Label | Train | Val | Test | Description |
 |----|-------|-------|-----|------|-------------|
-| 1 | Base (B) | 968 | 272 | 118 | Original annotations from Roboflow |
-| 2 | Tiled (W) | 15,488 | 4,352 | 1,888 | Tiled augmentation of Dataset 1 |
+| 1 | Base (B) | 968 | 272 | 118 | Original annotations — high-altitude NIR aerial (Roboflow sea-turtles-yia2e v1) |
+| 1-T | Tiled (W) | 15,488 | 4,352 | 1,888 | Tiled augmentation of Dataset 1 (4×4 grid per image) |
+| 3 | Closer-range (C) | 2,071 | 534 | 285 | Lower-altitude drone imagery (Roboflow sea-turtles-model v6) |
 
-The benchmark of 16 models used **Dataset 1** exclusively. Dataset 2 was used only in earlier exploratory experiments (see Section 11).
+**Experiment 1** used Dataset 1 exclusively. Dataset 1-Tiled was used only in earlier exploratory experiments (see Section 11). **Experiment 2** uses Dataset 2 (see Section 17).
 
-### 2.2 Source & Annotation Format
+### 2.2 Dataset 1 — Source & Annotation Format
 
 - **Source**: [Roboflow — sea-turtles-yia2e](https://universe.roboflow.com/gabriel-esteves-dy2cw/sea-turtles-yia2e/dataset/1), version 1
 - **License**: CC BY 4.0
@@ -65,6 +95,18 @@ The benchmark of 16 models used **Dataset 1** exclusively. Dataset 2 was used on
 - **Annotation format**: **YOLO TXT** (one `.txt` per image with normalized `class cx cy w h` format), as confirmed by `data.yaml` structure (train/valid/test pointing to image folders with paired label folders)
 - **Annotation tool**: Roboflow (web-based annotation platform)
 - **Class**: Single class — `Turtle` (nc: 1)
+
+### 2.6 Dataset 2 — Source & Characteristics (Experiment 2)
+
+- **Source**: [Roboflow — sea-turtles-model v6](https://universe.roboflow.com/gabriel-esteves/sea-turtles-model/dataset/6)
+- **License**: MIT
+- **Split**: 2,071 train / 534 val / 285 test (2,890 total images)
+- **Local path**: `c:/Users/gaby3/Documents/sea-turtles-detection/Dataset/sea-turtles-2/`
+- **Imagery type**: Drone footage at **lower altitude / closer range** than Dataset 1. Turtles appear larger in frame, with visible body detail and more varied backgrounds (water, beach, mixed). This is the dataset that corresponds to the type of video footage collected during field surveys.
+- **Altitude contrast with Dataset 1**: Dataset 1 was captured at high altitude, producing small turtle silhouettes against open water. Dataset 2 was captured at lower altitude, producing larger, more detailed turtle appearances. This difference is the root cause of the domain gap identified in Phase 4 tracking (Section 16.7).
+- **Annotation format**: YOLO TXT (same format as Dataset 1)
+- **Class**: Single class — `turtle` (nc: 1)
+- **Motivation**: After the tracking evaluation revealed that models trained on Dataset 1 failed on field videos (domain gap), Dataset 2 was selected to train models suited to real-world, lower-altitude deployment scenarios.
 
 ### 2.3 Bounding Box Size Distribution
 
@@ -78,13 +120,17 @@ The benchmark does not include an explicit bounding box size analysis script. Ho
 ### 2.4 Instance Distribution per Image
 
 - Not explicitly computed. From visual inspection of batch prediction outputs: most images appear to contain **1 to ~6 turtles** per frame, with some crowded scenes containing more overlapping individuals.
-- Dataset 2 (Tiled) splits each original image into 16 tiles (4×4 grid), leading to many tiles containing 0 turtles and some tiles containing dense groupings — explaining the 16× increase in image count with a non-uniform turtle density per tile.
+- Dataset 1-Tiled splits each original image into 16 tiles (4×4 grid), leading to many tiles containing 0 turtles and some tiles containing dense groupings — explaining the 16× increase in image count with a non-uniform turtle density per tile.
 
 ### 2.5 NIR Imagery Pre-processing
 
 - **No explicit NIR-specific pre-processing** was applied before training. Images were used as exported from Roboflow.
 - Ultralytics loads images as standard 3-channel tensors regardless of spectral content; NIR images stored as grayscale or pseudo-RGB are handled identically to visible-light imagery.
 - The Ultralytics HSV augmentation (hsv_h, hsv_s, hsv_v) operates on the loaded channels without special handling.
+
+---
+
+> **Scope note — Sections 3 through 16:** All content below up to Section 17 refers exclusively to **Experiment 1** (Dataset 1, high-altitude NIR imagery, benchmark run 2026-02-02). Section 17 covers Experiment 2 (Dataset 2, closer-range imagery).
 
 ---
 
@@ -240,9 +286,11 @@ The exact best epoch per model is not recoverable without the `results.csv` file
 
 ## 5. Benchmark Results — Full Metrics
 
+> _Experiment 1 — Dataset 1 (high-altitude NIR, 968 train images). For Experiment 2 results see Section 17._
+
 ### 5.1 Complete Results Table (sorted by mAP50)
 
-All values from `yolo_ultralytics_benchmark/results/benchmark_results.csv`. Run date: 2026-02-02.
+All values from `c:/Users/gaby3/Documents/sea-turtles-detection/results/benchmark_results.csv`. Run date: 2026-02-02.
 
 | Rank | Model | mAP50 | mAP50-95 | Precision | Recall | Train Time (min) | Efficiency (mAP50/min) | Run Name |
 |------|-------|-------|----------|-----------|--------|-----------------|----------------------|----------|
@@ -323,6 +371,8 @@ The YOLO26 architecture produces the tightest bounding boxes relative to its mAP
 
 ## 6. Confusion Matrices & Error Analysis
 
+> _Experiment 1 — Dataset 1._
+
 ### 6.1 Methodology
 
 Ultralytics generates normalised confusion matrices at a fixed confidence threshold (default: 0.25) and IoU threshold (default: 0.45). All matrices use 2 categories: `Turtle` (foreground) and `background`.
@@ -377,6 +427,8 @@ From visual inspection of `val_batch0_pred.jpg` (YOLOv9c):
 
 ## 7. Precision-Recall Curves
 
+> _Experiment 1 — Dataset 1._
+
 PR curves (`BoxPR_curve.png`) are available for all 16 models. Analysis of the YOLOv9c PR curve (representative of top models):
 
 - **Shape**: Near-perfect rectangular curve — precision remains at ~1.0 from recall 0.0 to ~0.7, then drops steeply.
@@ -389,6 +441,8 @@ Weaker models (nano tier) have less rectangular curves, with earlier precision d
 ---
 
 ## 8. Model Architecture Comparison
+
+> _Experiment 1 — Dataset 1. Architecture rankings may differ on Dataset 2 (see Section 17)._
 
 ### 8.1 Architecture Overview
 
@@ -457,13 +511,13 @@ A consistent pattern across all families: **larger models take longer but achiev
 
 2. **Benchmark vs Run 7 (YOLOv8m)**: The benchmark YOLOv8m (0.946) substantially outperforms Run 7 (0.796). The difference is attributable to `seed=42` (reproducibility), `batch=8` (vs 16 in Run 7, affecting gradient noise), and potentially different Ultralytics versions with improved defaults.
 
-3. **Dataset 1 vs Dataset 2 (Runs 1 vs 5, YOLOv8n)**: mAP50 was similar (0.809 vs 0.827) but the tiled dataset required only 100 epochs vs 50 to reach a similar level. The tiled dataset did not provide a substantial accuracy gain for YOLOv8n; the benefit may be larger for detecting smaller objects.
+3. **Dataset 1 vs Dataset 1-Tiled (Runs 1 vs 5, YOLOv8n)**: mAP50 was similar (0.809 vs 0.827) but the tiled dataset required only 100 epochs vs 50 to reach a similar level. The tiled dataset did not provide a substantial accuracy gain for YOLOv8n; the benefit may be larger for detecting smaller objects.
 
 4. **Training environment**: Early runs used Google Colab (GPU not specified, likely T4/V100); later runs and the full benchmark used local GPU (Windows, CUDA device 0). The local GPU enabled consistent, uninterrupted 100-epoch runs for all 16 models.
 
 ### 9.3 Per-Epoch Archive Data
 
-Raw per-epoch `results.csv` files exist in `archive/yolov8_local/runs/detect/` for YOLOv8n and YOLOv8m experiments (Runs 3, 4, 5, 7 and tuning runs). These contain per-epoch values for:
+Raw per-epoch `results.csv` files exist in `c:/Users/gaby3/Documents/sea-turtles-detection/archive/yolov8_local/runs/detect/` for YOLOv8n and YOLOv8m experiments (Runs 3, 4, 5, 7 and tuning runs). These contain per-epoch values for:
 `train/box_loss, train/cls_loss, train/dfl_loss, metrics/precision(B), metrics/recall(B), metrics/mAP50(B), metrics/mAP50-95(B), val/box_loss, val/cls_loss, val/dfl_loss, lr/pg0, lr/pg1, lr/pg2`
 
 The main **16-model benchmark runs do not have per-epoch CSV files available** in the repository (the `yolo_ultralytics_benchmark/runs/` directory is gitignored).
@@ -483,9 +537,9 @@ Multiple rounds of Ultralytics' built-in hyperparameter tuner (backed by Ray Tun
 | n_tune6_right | YOLOv8n | 200 (ran 84) | 34 | 0.796 | 0.466 | Dataset 1 |
 | m_tune7_right | YOLOv8m | 100 | 44 | 0.792 | 0.476 | Dataset 1 |
 | m_tune8_right | YOLOv8m | — | 27 | — | — | Dataset 1 |
-| m_tune8_right_dt2 | YOLOv8m | — | 27 | — | — | Dataset 2 |
-| n_tune_8_right_dt2 | YOLOv8n | — | 49 | — | — | Dataset 2 |
-| s_tune9_right_dt2 | YOLOv8s | — | 5 | — | — | Dataset 2 |
+| m_tune8_right_dt2 | YOLOv8m | — | 27 | — | — | Dataset 1-Tiled |
+| n_tune_8_right_dt2 | YOLOv8n | — | 49 | — | — | Dataset 1-Tiled |
+| s_tune9_right_dt2 | YOLOv8s | — | 5 | — | — | Dataset 1-Tiled |
 | s_train10_right | YOLOv8s | — | — | — | — | Dataset 1 |
 
 ### 10.3 Best Hyperparameters Found (YOLOv8m — m_tune7_right)
@@ -518,11 +572,11 @@ Critically, the tuned YOLOv8m achieved mAP50 ≈ 0.792 (best iteration), which i
 
 ---
 
-## 11. Dataset 2 — Tiled Dataset Experiments
+## 11. Dataset 1-Tiled — Tiled Dataset Experiments
 
 ### 11.1 Overview
 
-Dataset 2 is derived from Dataset 1 by tiling each image into a 4×4 grid of subtiles, creating a 16× larger dataset (968 → 15,488 training images). This technique is commonly used to improve detection of small objects.
+Dataset 1-Tiled is derived from Dataset 1 by tiling each image into a 4×4 grid of subtiles, creating a 16× larger dataset (968 → 15,488 training images). This technique is commonly used to improve detection of small objects.
 
 ### 11.2 Available Results
 
@@ -536,10 +590,10 @@ Dataset 2 is derived from Dataset 1 by tiling each image into a 4×4 grid of sub
 
 ### 11.3 Assessment
 
-- **Run 5 (Dataset 2, mAP50=0.827) vs Benchmark YOLOv8n (Dataset 1, mAP50=0.886)**: Dataset 1 outperforms Dataset 2 for YOLOv8n at 100 epochs. This suggests the original images (968 at 640 px) provide more training signal than the tiled variants at this resolution.
-- No medium or large model was benchmarked on Dataset 2 with 100 epochs.
+- **Run 5 (Dataset 1-Tiled, mAP50=0.827) vs Benchmark YOLOv8n (Dataset 1, mAP50=0.886)**: Dataset 1 outperforms Dataset 1-Tiled for YOLOv8n at 100 epochs. This suggests the original images (968 at 640 px) provide more training signal than the tiled variants at this resolution.
+- No medium or large model was benchmarked on Dataset 1-Tiled with 100 epochs.
 - The tiled dataset may be more beneficial at smaller input sizes or when detecting very small objects — conditions not explored in the current benchmark.
-- **A systematic comparison of all 16 models on Dataset 2 was not performed.**
+- **A systematic comparison of all 16 models on Dataset 1-Tiled was not performed.**
 
 ---
 
@@ -591,12 +645,14 @@ The following questions from the thesis analysis cannot be answered from the cur
 | TTA (Test-Time Augmentation) experiments | **Not performed** | Run `model.val(augment=True)` |
 | imgsz=1280 experiments | **Not performed** | Retrain or re-validate top models at 1280 |
 | YOLO26 architecture details (params, FLOPs) | **Not documented** | Check Ultralytics release notes for YOLO26 |
-| Complete Dataset 2 benchmark (all 16 models) | **Not performed** | Extend benchmark script to Dataset 2 |
+| Complete Dataset 1-Tiled benchmark (all 16 models) | **Not performed** | Extend benchmark script to Dataset 1-Tiled |
 | GPU model and VRAM | **Not documented** | Add to experimental setup documentation |
 
 ---
 
 ## 14. Key Findings for Thesis
+
+> _Based on Experiment 1 (Dataset 1). Experiment 2 findings will be added in Section 17 once training completes._
 
 ### 14.1 Performance Findings
 
@@ -635,16 +691,18 @@ The following questions from the thesis analysis cannot be answered from the cur
 
 ---
 
-*Generated from repository analysis — `yolo_ultralytics_benchmark/`, `archive/`, and `Dataset/` contents.*
+*Generated from repository analysis — `yolo_ultralytics_benchmark/`, `c:/Users/gaby3/Documents/sea-turtles-detection/archive/`, and `c:/Users/gaby3/Documents/sea-turtles-detection/Dataset/` contents.*
 *Last updated: 2026-03-07*
 
 ---
 
 ## 15. Phase 1 — Test Set Evaluation Results
 
+> _Experiment 1 — Dataset 1 test set (118 images). Model weights from the 2026-02-02 benchmark._
+>
 > Completed: 2026-03-07
-> Script: `yolo_ultralytics_benchmark/scripts/test_evaluation.py`
-> Results file: `yolo_ultralytics_benchmark/results/test_results.csv`
+> Script: `c:/Users/gaby3/Documents/sea-turtles-detection/scripts/test_evaluation.py`
+> Results file: `c:/Users/gaby3/Documents/sea-turtles-detection/results/test_results.csv`
 > Hardware: NVIDIA GeForce RTX 3070 (8 GB), Ultralytics 8.4.6, PyTorch 2.1.0+cu121
 > Test split: **261 images, 730 instances** (48 background images with no turtles)
 
@@ -738,13 +796,15 @@ These are images with no turtles present; no model produced false positives from
 
 ## 16. Phase 4 — ByteTrack Tracking Integration
 
+> _Uses the best model from Experiment 1 (YOLOv9m, trained on Dataset 1). The domain gap discovered here motivated Experiment 2 (Section 17)._
+
 ### 16.1 Objective
 
 Extend the frame-level detection pipeline with multi-object tracking so that each sea turtle receives a **persistent ID across frames**. This enables population counting and re-identification in drone video surveys without requiring additional annotated data.
 
 ### 16.2 Model Selected
 
-**YOLOv9m** (`runs/train/yolov9m_20260202_145822/weights/best.pt`).
+**YOLOv9m** (`c:/Users/gaby3/Documents/sea-turtles-detection/runs/train/yolov9m_20260202_145822/weights/best.pt`).
 
 #### Selection rationale
 
@@ -776,7 +836,7 @@ Custom tracker config: `yolo_ultralytics_benchmark/scripts/bytetrack_turtles.yam
 
 Accepts a video file or sorted image folder (pseudo-sequence). Outputs:
 
-- Annotated video (or frames) with bounding boxes and track IDs overlaid, saved under `results/tracking/<run_name>/`
+- Annotated video (or frames) with bounding boxes and track IDs overlaid, saved under `c:/Users/gaby3/Documents/sea-turtles-detection/results/tracking/<run_name>/`
 - `tracking_stats.txt` with: end-to-end FPS, unique track ID count, per-frame ID sets, ID-set-change count (activity proxy)
 
 #### Example usage
@@ -817,21 +877,35 @@ These subsampled stills cannot serve as a tracking sequence because there is no 
 
 Formal MOTA / HOTA metrics require ground-truth track IDs across frames (not available in this dataset). The qualitative approach above is appropriate for a thesis-level tracking evaluation.
 
-### 16.7 Tracking Evaluation Results (4 Videos)
+### 16.7 Tracking Evaluation Results
 
-ByteTrack was run on 4 drone videos using YOLOv9m. Detection quality was poor — the tracker produced frequent ID switches and missed turtles across most sequences.
+ByteTrack was run on a drone video (`c:/Users/gaby3/Documents/sea-turtles-detection/videos/turtle_footage4.mp4`) using YOLOv9m. Detection quality was extremely poor.
+
+**Quantitative results from `c:/Users/gaby3/Documents/sea-turtles-detection/results/tracking/yolov9m_bytetrack/tracking_stats.txt`:**
+
+| Metric | Value | Interpretation |
+| --- | --- | --- |
+| Source video | `c:/Users/gaby3/Documents/sea-turtles-detection/videos/turtle_footage4.mp4` | Closer-range drone footage |
+| Total frames | 1,989 | ~66 seconds at 30 FPS |
+| Processing time | 59.5 s | 33.4 FPS — real-time capable |
+| Unique track IDs assigned | **23** | Misleading: each is a new brief track, not 23 unique turtles |
+| ID set changes | **83** | 83 moments where tracked set changed — extreme instability |
+| Frames with any detection | **~85 / 1,989** | **≈ 4.3% of frames** — model detected nothing in 95.7% of frames |
+| Longest continuous track | **~10 frames** (ID 95, frames 1744–1755) | Equivalent to ~0.3 seconds |
+| Maximum simultaneous detections | **2** (IDs 97+98 at frames 1767–1768) | Never detected more than 2 turtles at once |
+
+**Detection pattern (from per_frame_ids log):** The detector fired in brief isolated bursts of 1–8 frames, then went silent for hundreds of frames. Each burst was assigned a new ID. No turtle was tracked continuously for more than ~10 frames. The video contains 1,989 frames and only ~85 had any detection — confirming the model was effectively blind to the content of this footage.
 
 **Root cause: domain gap between training data and evaluation videos.**
 
-| Training dataset | Evaluation videos |
-| --- | --- |
-| High-altitude aerial NIR images | Closer range footage |
-| Turtles in water / at sea surface | Turtles on land and in water |
-| Top-down perspective | Variable angle / closer perspective |
+| Property | Dataset 1 (training) | turtle_footage4.mp4 (evaluation) |
+| --- | --- | --- |
+| Altitude | High — turtles appear small | Lower — turtles appear larger |
+| Perspective | Strict top-down | Variable angle, closer range |
+| Imaging | NIR (near-infrared) | Standard visible-light video |
+| Environment | Turtles at sea surface | Turtles on beach and in water |
 
-The model was trained exclusively on high-altitude, top-down, at-sea images. When applied to videos taken at lower altitude or showing turtles on land, the visual appearance of turtles changes significantly (larger relative size, different body shape visible, different background texture). This causes the detector to miss turtles or produce low-confidence detections — which ByteTrack cannot track reliably.
-
-**This is not a tracker configuration problem.** Lowering thresholds would only increase false positives. The fundamental issue is that the training distribution does not match the video distribution.
+The model never saw turtles at this scale, angle, or lighting condition during training. It correctly suppressed uncertain detections rather than generating false positives — but the result was effective blindness to real turtles. **This is not a tracker configuration problem.** No amount of ByteTrack parameter tuning can compensate for a detector that was not trained on the target domain. This finding directly motivated Experiment 2 (Section 17).
 
 ### 16.8 Key Findings
 
@@ -860,3 +934,392 @@ Collect or annotate images of turtles at closer range and on land, add them to t
 | Mixed altitude + conditions | 400–800 annotated frames | High | Full deployment robustness |
 
 **Recommendation for thesis scope:** Use Option A (matching-domain video) for the tracking chapter. Document the domain gap as a limitation and propose Option B as future work.
+
+---
+
+## 17. Experiment 2 — Benchmark on Closer-Range Dataset
+
+### 17.1 Motivation — Why We Moved to a Different Dataset
+
+After completing Experiment 1 (Section 3–15), the natural next step was to validate the best model (YOLOv9m) in a real-world tracking scenario using ByteTrack (Phase 4, Section 16). ByteTrack was applied to **4 drone videos** filmed at lower altitude than the training imagery.
+
+#### What happened with the tracking
+
+The tracking results were poor across all 4 videos. The detector produced frequent missed detections and low-confidence outputs, which ByteTrack could not recover from regardless of threshold tuning.
+
+Observed symptoms during tracking evaluation:
+
+| Symptom | Observed behaviour |
+| --- | --- |
+| Detection rate | Very low — most turtles missed per frame |
+| Confidence scores | Consistently below `track_high_thresh` (0.35) |
+| Track continuity | IDs created briefly then immediately lost |
+| False positives | Low (model suppressed everything, not just turtles) |
+| ID switches | Frequent — tracker had no stable detections to follow |
+
+#### Root cause: domain gap
+
+The training data (Dataset 1) and the evaluation videos came from **different operational scenarios**:
+
+| Property | Dataset 1 (training) | Field videos (evaluation) |
+| --- | --- | --- |
+| Altitude | High — turtles appear small | Lower — turtles appear larger |
+| Perspective | Strict top-down aerial | Variable angle, closer range |
+| Environment | Turtles at sea surface | Turtles on beach and in water |
+| Imaging | NIR (near-infrared) | Standard visible-light video |
+| Turtle appearance | Small silhouettes, uniform | Larger, more detailed, varied backgrounds |
+
+The visual appearance of turtles in the field videos was fundamentally different from anything in the training set. The model had never seen turtles at this scale or from this perspective, so it correctly suppressed most detections as uncertain. **This is not a tracker problem — it is a training data problem.** No amount of ByteTrack parameter tuning can compensate for a detector that was not trained on the target domain.
+
+#### Decision: train on a closer-range dataset
+
+To solve the domain gap, we searched for a publicly available dataset that matched the field video conditions — lower altitude, visible light, varied backgrounds. The Roboflow dataset **sea-turtles-model v6** was identified as the best available match:
+
+- Captured at lower altitude than Dataset 1
+- Contains turtles in various environments (beach, water, mixed)
+- 2,890 images, MIT licence, pre-split into train/val/test
+
+Experiment 2 replicates the full 16-model benchmark protocol on this dataset, with the goal of producing models that perform in the same visual domain as the field videos where ByteTrack failed.
+
+This experiment answers: **do the same YOLO architectures remain capable when trained on closer-range imagery, and does the resulting model resolve the tracking domain gap?**
+
+### 17.2 Dataset Profile
+
+See Section 2.6 for full dataset characteristics. Summary:
+
+| Property | Value |
+| --- | --- |
+| Dataset name | sea-turtles-model v6 (Roboflow) |
+| License | MIT |
+| Train / Val / Test | 2,071 / 534 / 285 |
+| Total images | 2,890 |
+| Imagery type | Lower-altitude drone, visible light |
+| Classes | 1 (turtle) |
+| Local path | `c:/Users/gaby3/Documents/sea-turtles-detection/Dataset/sea-turtles-2/` |
+| Config | `c:/Users/gaby3/Documents/sea-turtles-detection/Dataset/sea-turtles-2/data.yaml` |
+
+### 17.3 Training Setup
+
+Identical hyperparameters to Experiment 1 (`benchmark_yolo_models_ds2.py`):
+
+| Parameter | Value |
+| --- | --- |
+| Models | Same 16 architectures (YOLOv8 n/s/m, YOLOv9 t/s/m/c, YOLOv10 n/s/m, YOLO11 n/s/m, YOLO26 n/s/m) |
+| Epochs | 100 |
+| Image size | 640 |
+| Batch | 8 |
+| Device | CUDA GPU (device 0) |
+| Seed | 42 |
+| Workers | 0 |
+| Results CSV | `c:/Users/gaby3/Documents/sea-turtles-detection/results/ds2/benchmark_results_ds2.csv` |
+| Run output | `c:/Users/gaby3/Documents/sea-turtles-detection/runs/train_ds2/` |
+
+The training order follows the same sequence: YOLO26 n/s/m → YOLO11 n/s/m → YOLOv10 n/s/m → YOLOv9 t/s/m/c → YOLOv8 n/s/m.
+
+### 17.4 Full Benchmark Results (Experiment 2 — Dataset 2)
+
+Training completed **2026-03-07 to 2026-03-09**, 16 models × 100 epochs. All values from `c:/Users/gaby3/Documents/sea-turtles-detection/results/ds2/benchmark_results_ds2.csv`.
+
+| Model | Train (min) | mAP50 | mAP50-95 | Precision | Recall | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| yolo26n | 108.9 | 0.386 | 0.223 | 0.160 | 0.700 | OK |
+| yolo26s | 111.3 | 0.460 | 0.275 | 0.230 | 0.667 | OK |
+| yolo26m | 148.0 | **0.504** | 0.279 | 0.178 | **0.800** | OK |
+| yolo11n | 95.1 | 0.533 | 0.346 | **1.000** | 0.067 | Anomaly — precision collapse |
+| yolo11s | 141.5 | 0.000 | 0.000 | 0.000 | 0.000 | Failed |
+| yolo11m | 136.6 | 0.000 | 0.000 | 0.000 | 0.000 | Failed |
+| yolov10n | 99.6 | 0.320 | 0.188 | 0.227 | 0.667 | OK |
+| yolov10s | 105.3 | 0.375 | 0.142 | 0.538 | 0.233 | OK |
+| yolov10m | 141.8 | 0.294 | 0.179 | 0.268 | 0.633 | OK |
+| yolov9t | 145.3 | 0.517 | 0.310 | **1.000** | 0.033 | Anomaly — precision collapse |
+| yolov9s | 145.5 | 0.000 | 0.000 | 0.000 | 0.000 | Failed |
+| yolov9m | 194.9 | 0.463 | 0.245 | 0.300 | **0.700** | OK |
+| yolov9c | 199.9 | 0.356 | 0.231 | 0.667 | 0.067 | Anomaly — precision collapse |
+| yolov8n | 105.0 | 0.385 | 0.194 | 0.500 | 0.467 | OK |
+| yolov8s | 111.8 | 0.395 | 0.226 | 0.340 | 0.567 | OK |
+| yolov8m | 133.1 | 0.517 | 0.310 | **1.000** | 0.033 | Anomaly — precision collapse |
+
+Sorted by mAP50 × Recall (tracking priority score):
+
+| Rank | Model | mAP50 | Recall | mAP50 × Recall |
+| --- | --- | --- | --- | --- |
+| 1 | **yolo26m** | 0.504 | 0.800 | **0.403** |
+| 2 | **yolov9m** | 0.463 | 0.700 | **0.324** |
+| 3 | **yolo26s** | 0.460 | 0.667 | **0.307** |
+| 4 | yolo26n | 0.386 | 0.700 | 0.270 |
+| 5 | yolov8s | 0.395 | 0.567 | 0.224 |
+
+### 17.5 Analysis — Why the Results Are Poor
+
+The Experiment 2 benchmark results are significantly worse than Experiment 1 (DS1 best: 0.955 mAP50 vs DS3 best: 0.504 mAP50). Three categories of failure are observed.
+
+#### Cause 1 — Complete training collapse (3 models: yolo11s, yolo11m, yolov9s)
+
+mAP50 = 0.000 on all metrics. These models failed to learn any meaningful detection. Likely cause: **training loss went NaN** or the model's head never connected to the dataset's label distribution. This can happen with:
+
+- Small batch size (batch=8) and large model on a heterogeneous dataset — gradient variance is high
+- A specific random seed that produces early bad batches, causing irreversible weight divergence
+- Interaction between certain architectures and the Dataset 2 class distribution
+
+These results are **not informative about the architecture's potential** — they reflect training instability, not model capability.
+
+#### Cause 2 — Precision collapse (4 models: yolo11n, yolov9t, yolov9c, yolov8m)
+
+Precision = 1.000, Recall ≈ 0.03–0.07. The model learned to fire on only 1–2 instances across the entire validation set — those instances are correct (precision = 1), but it misses almost all turtles (recall ≈ 0). This is a **degenerate solution**: the model found that predicting almost nothing is safe because the false-negative penalty in the loss is low.
+
+Root cause: **class imbalance or low instance density in Dataset 2**. If many val images contain no turtles and the images with turtles have few visible instances, the model learns that suppressing all predictions is a low-loss strategy. The NMS threshold during validation may also be too conservative for this dataset's confidence distribution.
+
+#### Cause 3 — Low mAP50 across all OK models (0.29–0.50)
+
+Even models that trained correctly score far below DS1. Contributing factors:
+
+- **Visual heterogeneity**: Dataset 2 contains varied backgrounds (beach, shallow water, vegetation) and turtle appearances (different sizes, angles, lighting). This is a harder detection problem than DS1's uniform aerial view.
+- **Fewer training samples per visual cluster**: 2,071 training images spread across more conditions = less per-condition coverage than DS1's 968 images of one scenario.
+- **Val/test set size**: with only 534 val images and an estimated small number of turtle instances, a single missed detection shifts recall significantly. The metrics are **high-variance** at this scale.
+- **Same hyperparameters as DS1**: batch=8 and workers=0 were calibrated for DS1's simpler distribution. Dataset 2 likely benefits from larger batch or higher learning rate warmup.
+
+#### Summary
+
+| Failure type | Models affected | Root cause |
+| --- | --- | --- |
+| Complete collapse (0.0) | yolo11s, yolo11m, yolov9s | Training divergence; batch=8 instability |
+| Precision collapse | yolo11n, yolov9t, yolov9c, yolov8m | Degenerate safe solution; class imbalance |
+| Low but valid mAP50 | Remaining 9 models | Dataset heterogeneity + small val set |
+
+### 17.6 Model Selection for Retraining (Phase 3)
+
+Based on the benchmark, the **3 models with the highest potential for field deployment** (best mAP50 × Recall score, excluding anomalous results):
+
+| Model | mAP50 | Recall | Rationale |
+| --- | --- | --- | --- |
+| **yolo26m** | 0.504 | 0.800 | Highest recall — fewest missed turtles; best overall score |
+| **yolov9m** | 0.463 | 0.700 | Proven architecture from Experiment 1; consistent across both experiments |
+| **yolo26s** | 0.460 | 0.667 | Best small model; same family as top performer |
+
+These three will be retrained with **early stopping** to allow convergence beyond 100 epochs (see Section 17.7).
+
+### 17.7 Retraining Strategy — Early Stopping (Phase 3)
+
+**Approach:** Retrain the 3 selected models with `patience=50` (stop if no improvement in val mAP50 for 50 consecutive epochs), a higher epoch ceiling (300), and corrected hyperparameters to address the instability observed.
+
+| Parameter | Benchmark value | Retrain value | Reason |
+| --- | --- | --- | --- |
+| `epochs` | 100 | 300 (ceiling) | Allow full convergence |
+| `patience` | 100 (disabled) | **50** | Stop when learning plateaus |
+| `batch` | 8 | **16** | Larger batches → more stable gradients |
+| `workers` | 0 | **4** | Parallel data prefetch; GPU was below 100% utilisation |
+| `seed` | 42 | 42 | Keep reproducible |
+
+**Expected outcome:** With early stopping, training stops automatically when val mAP50 stops improving — typically 150–200 epochs for models that are still learning at epoch 100. This avoids overfitting and saves GPU time compared to a fixed 300-epoch run.
+
+**Script:** `c:/Users/gaby3/Documents/sea-turtles-detection/scripts/benchmark_yolo_models_ds2_retrain.py` (to be created) — same structure as `benchmark_yolo_models_ds2.py` but limited to 3 models with updated parameters above.
+
+### 17.8 Comparison with Experiment 1
+
+| Dimension | Experiment 1 (DS1) | Experiment 2 (DS3, initial) | Experiment 2 (DS3, retrain) |
+| --- | --- | --- | --- |
+| Dataset altitude | High (small turtles) | Lower (larger turtles) | Lower (larger turtles) |
+| Training images | 968 | 2,071 | 2,071 |
+| Best mAP50 | 0.955 (YOLOv9c) | 0.504 (yolo26m) | TBD |
+| Best recall | 0.915 (YOLO11m) | 0.800 (yolo26m) | TBD |
+| Failed models | 0 / 16 | 7 / 16 | Expected 0 / 3 |
+| Domain match for field video | No | Yes | Yes |
+
+The architecture ranking from Experiment 1 (YOLOv9 and YOLO26 families strongest) is **partially confirmed** in Experiment 2: yolo26m and yolov9m are again in the top 3. The failure of YOLOv11 and YOLOv9s/c may be specific to the batch=8 instability rather than the architectures themselves.
+
+### 17.9 Next Steps — Phase 3: Targeted Retraining (Pending Results)
+
+> **Current status (2026-03-09):** The initial 16-model benchmark on Dataset 2 is complete (Section 17.4). The 3 best models have been identified (Section 17.6). **Phase 3 retraining has not yet started — results are pending.**
+
+The plan is to retrain the 3 selected models (yolo26m, yolov9m, yolo26s) with corrected hyperparameters and early stopping. This section will be updated with results once training completes.
+
+#### Phase 3 plan
+
+1. **Create retrain script** — `c:/Users/gaby3/Documents/sea-turtles-detection/scripts/benchmark_yolo_models_ds2_retrain.py`: same structure as the initial benchmark but limited to 3 models, with `batch=16`, `workers=4`, `patience=50`, `epochs=300` ceiling.
+2. **Run retraining** — estimated time: ~3–5 hours per model (early stopping expected to trigger before epoch 300).
+3. **Evaluate on test set** — run test-set evaluation equivalent to `c:/Users/gaby3/Documents/sea-turtles-detection/scripts/test_evaluation.py` on the 3 retrained weights.
+4. **Run ByteTrack on field videos** — apply `c:/Users/gaby3/Documents/sea-turtles-detection/scripts/tracking.py` to the same 4 videos where Experiment 1 failed (Section 16.7), using the best retrained model. This directly tests whether the domain gap is resolved.
+5. **Document results** — update Section 17.8 comparison table and add tracking quality comparison (Experiment 1 model vs retrained Experiment 2 model).
+
+#### What success looks like
+
+| Metric | Experiment 1 (DS1) | Target (DS3 retrain) |
+| --- | --- | --- |
+| Val mAP50 (best model) | 0.955 | > 0.65 (estimated realistic target) |
+| Field video detection rate | Very low (domain gap) | Consistent detections per frame |
+| ByteTrack track continuity | Poor (IDs lost immediately) | Stable IDs across frames |
+
+A retrained model that produces consistent detections on the field videos — even at lower mAP50 than Experiment 1 — represents a successful resolution of the domain gap and is the primary deliverable of this phase.
+
+---
+
+## 18. Project File & Asset Index
+
+> This section maps every result file, image, and model weight to its full path. Intended as a reference for the thesis author and for any LLM generating the written thesis chapters.
+
+### 18.1 Project Directory Structure
+
+```text
+c:/Users/gaby3/Documents/sea-turtles-detection/
+├── ANALYSIS.md                          # This document
+├── Makefile                             # All runnable commands
+├── configs/
+│   └── bytetrack_turtles.yaml           # ByteTrack tracker configuration
+├── scripts/
+│   ├── benchmark_yolo_models.py         # Experiment 1: train+val 16 models on DS1
+│   ├── benchmark_yolo_models_ds2.py     # Experiment 2: train+val 16 models on DS3
+│   ├── test_evaluation.py               # Run test-set evaluation on trained models
+│   └── tracking.py                      # ByteTrack inference on video
+├── Dataset/
+│   ├── sea-turtles-1/                   # Dataset 1 (high-altitude NIR, CC BY 4.0)
+│   │   └── data.yaml
+│   └── sea-turtles-2/                   # Dataset 2 (closer-range, MIT) [gitignored]
+│       └── data.yaml
+├── models/                              # Base YOLO .pt weight files (pretrained COCO)
+├── results/
+│   ├── benchmark_results.csv            # Experiment 1 val metrics (all 16 models)
+│   ├── test_results.csv                 # Experiment 1 test-set metrics (all 16 models)
+│   ├── images/                          # Val-set visualisations per model (Experiment 1)
+│   │   └── {model}/
+│   │       ├── results.png              # Training curves (loss + metrics vs epoch)
+│   │       ├── confusion_matrix_normalized.png
+│   │       ├── BoxPR_curve.png          # Precision-Recall curve
+│   │       └── val_batch0_pred.jpg      # Sample validation predictions
+│   ├── test_runs/                       # Test-set visualisations per model (Experiment 1)
+│   │   └── {model}/
+│   │       ├── confusion_matrix.png
+│   │       ├── confusion_matrix_normalized.png
+│   │       ├── BoxPR_curve.png
+│   │       ├── BoxP_curve.png
+│   │       ├── BoxR_curve.png
+│   │       ├── BoxF1_curve.png
+│   │       ├── val_batch0_labels.jpg    # Ground truth boxes
+│   │       ├── val_batch0_pred.jpg      # Predicted boxes
+│   │       ├── val_batch1_labels.jpg
+│   │       ├── val_batch1_pred.jpg
+│   │       ├── val_batch2_labels.jpg
+│   │       └── val_batch2_pred.jpg
+│   ├── tracking/
+│   │   └── yolov9m_bytetrack/
+│   │       └── tracking_stats.txt       # ByteTrack stats for turtle_footage4.mp4
+│   └── ds2/
+│       └── benchmark_results_ds2.csv    # Experiment 2 val metrics (all 16 models)
+├── runs/
+│   ├── train/                           # Experiment 1 training runs
+│   │   └── {model}_{timestamp}/
+│   │       └── weights/
+│   │           ├── best.pt              # Best checkpoint (used for all evaluations)
+│   │           └── last.pt
+│   └── train_ds2/                       # Experiment 2 training runs
+│       └── {model}_ds2_{timestamp}/
+│           └── weights/
+│               ├── best.pt
+│               └── last.pt
+├── videos/
+│   └── turtle_footage4.mp4              # Field video used for ByteTrack evaluation
+└── archive/                             # Historical experiments (numbered chronologically)
+    ├── 01_yolov5/
+    ├── 02_yolov8_roboflow/
+    ├── 03_yolov8_local/
+    ├── 04_yolov9_roboflow/
+    ├── 05_yolov9_native/
+    └── 06_yolov9_ultralytics/
+```
+
+### 18.2 Experiment 1 — Model Weights Paths
+
+All weights at `c:/Users/gaby3/Documents/sea-turtles-detection/runs/train/{run_name}/weights/best.pt`. Run names from `c:/Users/gaby3/Documents/sea-turtles-detection/results/benchmark_results.csv`:
+
+| Model | Run name | Best weights path |
+| --- | --- | --- |
+| yolov9c | yolov9c_20260202_163426 | `c:/Users/gaby3/Documents/sea-turtles-detection/runs/train/yolov9c_20260202_163426/weights/best.pt` |
+| yolo26m | yolo26m_20260202_033138 | `c:/Users/gaby3/Documents/sea-turtles-detection/runs/train/yolo26m_20260202_033138/weights/best.pt` |
+| yolov9m | yolov9m_20260202_145822 | `c:/Users/gaby3/Documents/sea-turtles-detection/runs/train/yolov9m_20260202_145822/weights/best.pt` |
+| yolo11m | yolo11m_20260202_065642 | `c:/Users/gaby3/Documents/sea-turtles-detection/runs/train/yolo11m_20260202_065642/weights/best.pt` |
+| yolov8m | yolov8m_20260202_200749 | `c:/Users/gaby3/Documents/sea-turtles-detection/runs/train/yolov8m_20260202_200749/weights/best.pt` |
+| yolov10m | yolov10m_20260202_102932 | `c:/Users/gaby3/Documents/sea-turtles-detection/runs/train/yolov10m_20260202_102932/weights/best.pt` |
+| yolo26s | yolo26s_20260202_022129 | `c:/Users/gaby3/Documents/sea-turtles-detection/runs/train/yolo26s_20260202_022129/weights/best.pt` |
+| yolov10s | yolov10s_20260202_092131 | `c:/Users/gaby3/Documents/sea-turtles-detection/runs/train/yolov10s_20260202_092131/weights/best.pt` |
+| yolov8s | yolov8s_20260202_191241 | `c:/Users/gaby3/Documents/sea-turtles-detection/runs/train/yolov8s_20260202_191241/weights/best.pt` |
+| yolo11s | yolo11s_20260202_055950 | `c:/Users/gaby3/Documents/sea-turtles-detection/runs/train/yolo11s_20260202_055950/weights/best.pt` |
+| yolov9s | yolov9s_20260202_132754 | `c:/Users/gaby3/Documents/sea-turtles-detection/runs/train/yolov9s_20260202_132754/weights/best.pt` |
+| yolo11n | yolo11n_20260202_050518 | `c:/Users/gaby3/Documents/sea-turtles-detection/runs/train/yolo11n_20260202_050518/weights/best.pt` |
+| yolov10n | yolov10n_20260202_081804 | `c:/Users/gaby3/Documents/sea-turtles-detection/runs/train/yolov10n_20260202_081804/weights/best.pt` |
+| yolo26n | yolo26n_20260202_011017 | `c:/Users/gaby3/Documents/sea-turtles-detection/runs/train/yolo26n_20260202_011017/weights/best.pt` |
+| yolov9t | yolov9t_20260202_120044 | `c:/Users/gaby3/Documents/sea-turtles-detection/runs/train/yolov9t_20260202_120044/weights/best.pt` |
+| yolov8n | yolov8n_20260202_182141 | `c:/Users/gaby3/Documents/sea-turtles-detection/runs/train/yolov8n_20260202_182141/weights/best.pt` |
+
+**Model used for ByteTrack (Phase 4):** `c:/Users/gaby3/Documents/sea-turtles-detection/runs/train/yolov9m_20260202_145822/weights/best.pt`
+
+### 18.3 Experiment 2 — Model Weights Paths
+
+All weights at `c:/Users/gaby3/Documents/sea-turtles-detection/runs/train_ds2/{run_name}/weights/best.pt`. Run names from `c:/Users/gaby3/Documents/sea-turtles-detection/results/ds2/benchmark_results_ds2.csv`:
+
+| Model | Run name | Best weights path |
+| --- | --- | --- |
+| yolo26n | yolo26n_ds2_20260307_141840 | `c:/Users/gaby3/Documents/sea-turtles-detection/runs/train_ds2/yolo26n_ds2_20260307_141840/weights/best.pt` |
+| yolo26s | yolo26s_ds2_20260307_160759 | `c:/Users/gaby3/Documents/sea-turtles-detection/runs/train_ds2/yolo26s_ds2_20260307_160759/weights/best.pt` |
+| yolo26m | yolo26m_ds2_20260307_175942 | `c:/Users/gaby3/Documents/sea-turtles-detection/runs/train_ds2/yolo26m_ds2_20260307_175942/weights/best.pt` |
+| yolo11n | yolo11n_ds2_20260307_202831 | `c:/Users/gaby3/Documents/sea-turtles-detection/runs/train_ds2/yolo11n_ds2_20260307_202831/weights/best.pt` |
+| yolo11s | yolo11s_ds2_20260307_220410 | `c:/Users/gaby3/Documents/sea-turtles-detection/runs/train_ds2/yolo11s_ds2_20260307_220410/weights/best.pt` |
+| yolo11m | yolo11m_ds2_20260308_002606 | `c:/Users/gaby3/Documents/sea-turtles-detection/runs/train_ds2/yolo11m_ds2_20260308_002606/weights/best.pt` |
+| yolov10n | yolov10n_ds2_20260308_024329 | `c:/Users/gaby3/Documents/sea-turtles-detection/runs/train_ds2/yolov10n_ds2_20260308_024329/weights/best.pt` |
+| yolov10s | yolov10s_ds2_20260308_042325 | `c:/Users/gaby3/Documents/sea-turtles-detection/runs/train_ds2/yolov10s_ds2_20260308_042325/weights/best.pt` |
+| yolov10m | yolov10m_ds2_20260308_060905 | `c:/Users/gaby3/Documents/sea-turtles-detection/runs/train_ds2/yolov10m_ds2_20260308_060905/weights/best.pt` |
+| yolov9t | yolov9t_ds2_20260308_083119 | `c:/Users/gaby3/Documents/sea-turtles-detection/runs/train_ds2/yolov9t_ds2_20260308_083119/weights/best.pt` |
+| yolov9s | yolov9s_ds2_20260308_105656 | `c:/Users/gaby3/Documents/sea-turtles-detection/runs/train_ds2/yolov9s_ds2_20260308_105656/weights/best.pt` |
+| yolov9m | yolov9m_ds2_20260308_132249 | `c:/Users/gaby3/Documents/sea-turtles-detection/runs/train_ds2/yolov9m_ds2_20260308_132249/weights/best.pt` |
+| yolov9c | yolov9c_ds2_20260308_163820 | `c:/Users/gaby3/Documents/sea-turtles-detection/runs/train_ds2/yolov9c_ds2_20260308_163820/weights/best.pt` |
+| yolov8n | yolov8n_ds2_20260308_195841 | `c:/Users/gaby3/Documents/sea-turtles-detection/runs/train_ds2/yolov8n_ds2_20260308_195841/weights/best.pt` |
+| yolov8s | yolov8s_ds2_20260308_214415 | `c:/Users/gaby3/Documents/sea-turtles-detection/runs/train_ds2/yolov8s_ds2_20260308_214415/weights/best.pt` |
+| yolov8m | yolov8m_ds2_20260308_233638 | `c:/Users/gaby3/Documents/sea-turtles-detection/runs/train_ds2/yolov8m_ds2_20260308_233638/weights/best.pt` |
+
+### 18.4 Experiment 1 — Val-Set Image Assets
+
+Per-model visualisation images saved during training validation. Path pattern: `c:/Users/gaby3/Documents/sea-turtles-detection/results/images/{model}/{file}`.
+
+| Model | results.png | confusion_matrix_normalized.png | BoxPR_curve.png | val_batch0_pred.jpg |
+| --- | --- | --- | --- | --- |
+| yolo26n | `c:/Users/gaby3/Documents/sea-turtles-detection/results/images/yolo26n/results.png` | `c:/Users/gaby3/Documents/sea-turtles-detection/results/images/yolo26n/confusion_matrix_normalized.png` | `c:/Users/gaby3/Documents/sea-turtles-detection/results/images/yolo26n/BoxPR_curve.png` | `c:/Users/gaby3/Documents/sea-turtles-detection/results/images/yolo26n/val_batch0_pred.jpg` |
+| yolo26s | `c:/Users/gaby3/Documents/sea-turtles-detection/results/images/yolo26s/results.png` | `c:/Users/gaby3/Documents/sea-turtles-detection/results/images/yolo26s/confusion_matrix_normalized.png` | `c:/Users/gaby3/Documents/sea-turtles-detection/results/images/yolo26s/BoxPR_curve.png` | `c:/Users/gaby3/Documents/sea-turtles-detection/results/images/yolo26s/val_batch0_pred.jpg` |
+| yolo26m | `c:/Users/gaby3/Documents/sea-turtles-detection/results/images/yolo26m/results.png` | `c:/Users/gaby3/Documents/sea-turtles-detection/results/images/yolo26m/confusion_matrix_normalized.png` | `c:/Users/gaby3/Documents/sea-turtles-detection/results/images/yolo26m/BoxPR_curve.png` | `c:/Users/gaby3/Documents/sea-turtles-detection/results/images/yolo26m/val_batch0_pred.jpg` |
+| yolo11n | `c:/Users/gaby3/Documents/sea-turtles-detection/results/images/yolo11n/results.png` | `c:/Users/gaby3/Documents/sea-turtles-detection/results/images/yolo11n/confusion_matrix_normalized.png` | `c:/Users/gaby3/Documents/sea-turtles-detection/results/images/yolo11n/BoxPR_curve.png` | `c:/Users/gaby3/Documents/sea-turtles-detection/results/images/yolo11n/val_batch0_pred.jpg` |
+| yolo11s | `c:/Users/gaby3/Documents/sea-turtles-detection/results/images/yolo11s/results.png` | `c:/Users/gaby3/Documents/sea-turtles-detection/results/images/yolo11s/confusion_matrix_normalized.png` | `c:/Users/gaby3/Documents/sea-turtles-detection/results/images/yolo11s/BoxPR_curve.png` | `c:/Users/gaby3/Documents/sea-turtles-detection/results/images/yolo11s/val_batch0_pred.jpg` |
+| yolo11m | `c:/Users/gaby3/Documents/sea-turtles-detection/results/images/yolo11m/results.png` | `c:/Users/gaby3/Documents/sea-turtles-detection/results/images/yolo11m/confusion_matrix_normalized.png` | `c:/Users/gaby3/Documents/sea-turtles-detection/results/images/yolo11m/BoxPR_curve.png` | `c:/Users/gaby3/Documents/sea-turtles-detection/results/images/yolo11m/val_batch0_pred.jpg` |
+| yolov10n | `c:/Users/gaby3/Documents/sea-turtles-detection/results/images/yolov10n/results.png` | `c:/Users/gaby3/Documents/sea-turtles-detection/results/images/yolov10n/confusion_matrix_normalized.png` | `c:/Users/gaby3/Documents/sea-turtles-detection/results/images/yolov10n/BoxPR_curve.png` | `c:/Users/gaby3/Documents/sea-turtles-detection/results/images/yolov10n/val_batch0_pred.jpg` |
+| yolov10s | `c:/Users/gaby3/Documents/sea-turtles-detection/results/images/yolov10s/results.png` | `c:/Users/gaby3/Documents/sea-turtles-detection/results/images/yolov10s/confusion_matrix_normalized.png` | `c:/Users/gaby3/Documents/sea-turtles-detection/results/images/yolov10s/BoxPR_curve.png` | `c:/Users/gaby3/Documents/sea-turtles-detection/results/images/yolov10s/val_batch0_pred.jpg` |
+| yolov10m | `c:/Users/gaby3/Documents/sea-turtles-detection/results/images/yolov10m/results.png` | `c:/Users/gaby3/Documents/sea-turtles-detection/results/images/yolov10m/confusion_matrix_normalized.png` | `c:/Users/gaby3/Documents/sea-turtles-detection/results/images/yolov10m/BoxPR_curve.png` | `c:/Users/gaby3/Documents/sea-turtles-detection/results/images/yolov10m/val_batch0_pred.jpg` |
+| yolov9t | `c:/Users/gaby3/Documents/sea-turtles-detection/results/images/yolov9t/results.png` | `c:/Users/gaby3/Documents/sea-turtles-detection/results/images/yolov9t/confusion_matrix_normalized.png` | `c:/Users/gaby3/Documents/sea-turtles-detection/results/images/yolov9t/BoxPR_curve.png` | `c:/Users/gaby3/Documents/sea-turtles-detection/results/images/yolov9t/val_batch0_pred.jpg` |
+| yolov9s | `c:/Users/gaby3/Documents/sea-turtles-detection/results/images/yolov9s/results.png` | `c:/Users/gaby3/Documents/sea-turtles-detection/results/images/yolov9s/confusion_matrix_normalized.png` | `c:/Users/gaby3/Documents/sea-turtles-detection/results/images/yolov9s/BoxPR_curve.png` | `c:/Users/gaby3/Documents/sea-turtles-detection/results/images/yolov9s/val_batch0_pred.jpg` |
+| yolov9m | `c:/Users/gaby3/Documents/sea-turtles-detection/results/images/yolov9m/results.png` | `c:/Users/gaby3/Documents/sea-turtles-detection/results/images/yolov9m/confusion_matrix_normalized.png` | `c:/Users/gaby3/Documents/sea-turtles-detection/results/images/yolov9m/BoxPR_curve.png` | `c:/Users/gaby3/Documents/sea-turtles-detection/results/images/yolov9m/val_batch0_pred.jpg` |
+| yolov9c | `c:/Users/gaby3/Documents/sea-turtles-detection/results/images/yolov9c/results.png` | `c:/Users/gaby3/Documents/sea-turtles-detection/results/images/yolov9c/confusion_matrix_normalized.png` | `c:/Users/gaby3/Documents/sea-turtles-detection/results/images/yolov9c/BoxPR_curve.png` | `c:/Users/gaby3/Documents/sea-turtles-detection/results/images/yolov9c/val_batch0_pred.jpg` |
+| yolov8n | `c:/Users/gaby3/Documents/sea-turtles-detection/results/images/yolov8n/results.png` | `c:/Users/gaby3/Documents/sea-turtles-detection/results/images/yolov8n/confusion_matrix_normalized.png` | `c:/Users/gaby3/Documents/sea-turtles-detection/results/images/yolov8n/BoxPR_curve.png` | `c:/Users/gaby3/Documents/sea-turtles-detection/results/images/yolov8n/val_batch0_pred.jpg` |
+| yolov8s | `c:/Users/gaby3/Documents/sea-turtles-detection/results/images/yolov8s/results.png` | `c:/Users/gaby3/Documents/sea-turtles-detection/results/images/yolov8s/confusion_matrix_normalized.png` | `c:/Users/gaby3/Documents/sea-turtles-detection/results/images/yolov8s/BoxPR_curve.png` | `c:/Users/gaby3/Documents/sea-turtles-detection/results/images/yolov8s/val_batch0_pred.jpg` |
+| yolov8m | `c:/Users/gaby3/Documents/sea-turtles-detection/results/images/yolov8m/results.png` | `c:/Users/gaby3/Documents/sea-turtles-detection/results/images/yolov8m/confusion_matrix_normalized.png` | `c:/Users/gaby3/Documents/sea-turtles-detection/results/images/yolov8m/BoxPR_curve.png` | `c:/Users/gaby3/Documents/sea-turtles-detection/results/images/yolov8m/val_batch0_pred.jpg` |
+
+### 18.5 Experiment 1 — Test-Set Image Assets
+
+Per-model images from the test-set evaluation run. Path pattern: `c:/Users/gaby3/Documents/sea-turtles-detection/results/test_runs/{model}/{file}`. Each model has:
+`confusion_matrix.png`, `confusion_matrix_normalized.png`, `BoxPR_curve.png`, `BoxP_curve.png`, `BoxR_curve.png`, `BoxF1_curve.png`, `val_batch0_labels.jpg`, `val_batch0_pred.jpg`, `val_batch1_labels.jpg`, `val_batch1_pred.jpg`, `val_batch2_labels.jpg`, `val_batch2_pred.jpg`
+
+Models with test-set image assets:
+`yolo26n`, `yolo26s`, `yolo26m`, `yolo11n`, `yolo11s`, `yolo11m`, `yolov10n`, `yolov10s`, `yolov10m`, `yolov9t`, `yolov9s`, `yolov9m`, `yolov9c`, `yolov8n`, `yolov8s`, `yolov8m`
+
+Example full paths for YOLOv9m (best tracking model):
+
+- `c:/Users/gaby3/Documents/sea-turtles-detection/results/test_runs/yolov9m/confusion_matrix_normalized.png`
+- `c:/Users/gaby3/Documents/sea-turtles-detection/results/test_runs/yolov9m/BoxPR_curve.png`
+- `c:/Users/gaby3/Documents/sea-turtles-detection/results/test_runs/yolov9m/BoxF1_curve.png`
+- `c:/Users/gaby3/Documents/sea-turtles-detection/results/test_runs/yolov9m/val_batch0_pred.jpg`
+
+### 18.6 Key Raw Data Files
+
+| File | Description | Experiment |
+| --- | --- | --- |
+| `c:/Users/gaby3/Documents/sea-turtles-detection/results/benchmark_results.csv` | Val metrics for all 16 models | Experiment 1 |
+| `c:/Users/gaby3/Documents/sea-turtles-detection/results/test_results.csv` | Test-set metrics + inference timing for all 16 models | Experiment 1 |
+| `c:/Users/gaby3/Documents/sea-turtles-detection/results/ds2/benchmark_results_ds2.csv` | Val metrics for all 16 models on Dataset 2 | Experiment 2 |
+| `c:/Users/gaby3/Documents/sea-turtles-detection/results/tracking/yolov9m_bytetrack/tracking_stats.txt` | ByteTrack run stats (1989 frames, 33.4 FPS, 23 IDs, 4.3% detection rate) | Phase 4 |
+| `c:/Users/gaby3/Documents/sea-turtles-detection/Dataset/sea-turtles-1/data.yaml` | Dataset 1 split config | Experiment 1 |
+| `c:/Users/gaby3/Documents/sea-turtles-detection/Dataset/sea-turtles-2/data.yaml` | Dataset 2 split config | Experiment 2 |
+| `c:/Users/gaby3/Documents/sea-turtles-detection/configs/bytetrack_turtles.yaml` | ByteTrack parameters (tuned for sea turtles) | Phase 4 |
