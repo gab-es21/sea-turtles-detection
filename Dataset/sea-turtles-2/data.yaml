@@ -1,0 +1,22 @@
+# Dataset 2 — Sea Turtles Model v6 (lower-altitude, closer-range imagery)
+# Source: https://universe.roboflow.com/gabriel-esteves/sea-turtles-model/dataset/6
+# License: MIT
+# Images: 2890 (2071 train / 534 valid / 285 test)
+#
+# NOTE: images are stored in archive/03_yolov8_local/Sea-Turtles-Model-6/
+# This yaml uses absolute-style paths resolved by the benchmark script.
+
+names:
+- turtle
+nc: 1
+roboflow:
+  license: MIT
+  project: sea-turtles-model
+  url: https://universe.roboflow.com/gabriel-esteves/sea-turtles-model/dataset/6
+  version: 6
+  workspace: gabriel-esteves
+
+# Paths are relative to this file's location
+train: train/images
+val: valid/images
+test: test/images
