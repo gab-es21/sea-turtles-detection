@@ -11,8 +11,8 @@
     --claro: #E8EEF4;
     --texto: #1d232a;
     --fundo: #ffffff;
-    --cartao: #f6f8fa;
     --borda: #d5dde5;
+    --tab: #f1f4f7;
   }
   @media (prefers-color-scheme: dark) {
     :root {
@@ -20,8 +20,8 @@
       --claro: #1b2a38;
       --texto: #e6edf3;
       --fundo: #0d1117;
-      --cartao: #161b22;
       --borda: #30363d;
+      --tab: #161b22;
     }
   }
   * { box-sizing: border-box; }
@@ -32,25 +32,26 @@
     font-family: Georgia, "Times New Roman", serif;
     line-height: 1.5;
   }
-  header {
-    background: #0B2E4F;
+  header { background: #0B2E4F; color: #fff; padding: 24px 16px 0; }
+  .wrap { max-width: 1100px; margin: 0 auto; }
+  h1 { margin: 0 0 4px; font-size: 1.6rem; }
+  header p { margin: 0 0 18px; opacity: .85; }
+  nav { display: flex; flex-wrap: wrap; gap: 4px; }
+  nav a {
     color: #fff;
-    padding: 28px 16px;
+    text-decoration: none;
+    padding: 10px 16px;
+    border-radius: 8px 8px 0 0;
+    background: rgba(255, 255, 255, .12);
+    font-size: .95rem;
   }
-  header .wrap, main { max-width: 1100px; margin: 0 auto; }
-  h1 { margin: 0 0 6px; font-size: 1.7rem; }
-  header p { margin: 0; opacity: .85; }
-  main { padding: 24px 16px 48px; }
-  .legenda {
-    background: var(--claro);
-    border-radius: 8px;
-    padding: 12px 16px;
-    margin-bottom: 28px;
-  }
-  .legenda ul { margin: 6px 0 0; padding-left: 20px; }
-  section { margin-bottom: 36px; scroll-margin-top: 16px; }
-  h2 { color: var(--azul); font-size: 1.25rem; margin: 0 0 4px; }
-  .meta { margin: 0 0 10px; font-size: .95rem; opacity: .8; }
+  nav a:hover { background: rgba(255, 255, 255, .22); }
+  nav a[aria-selected="true"] { background: var(--fundo); color: var(--azul); font-weight: bold; }
+  main { padding: 20px 16px 40px; }
+  .painel { display: none; }
+  .painel.ativo { display: block; }
+  h2 { color: var(--azul); font-size: 1.25rem; margin: 0 0 2px; }
+  .meta { margin: 0 0 12px; opacity: .8; }
   video {
     width: 100%;
     height: auto;
@@ -59,7 +60,15 @@
     background: #000;
     display: block;
   }
-  footer { font-size: .85rem; opacity: .7; padding: 0 16px 32px; max-width: 1100px; margin: 0 auto; }
+  .legenda {
+    background: var(--claro);
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-top: 16px;
+    font-size: .95rem;
+  }
+  .legenda ul { margin: 6px 0 0; padding-left: 20px; }
+  footer { font-size: .85rem; opacity: .7; padding: 0 16px 32px; }
   a { color: var(--azul); }
 </style>
 </head>
@@ -68,9 +77,42 @@
   <div class="wrap">
     <h1>Seguimento de tartarugas marinhas em vídeos de <em>drone</em></h1>
     <p>Dissertação de mestrado em Engenharia Informática, Universidade da Beira Interior</p>
+    <nav role="tablist" aria-label="Vídeos">
+      <a role="tab" href="#No5_No7">No5 + No7</a>
+      <a role="tab" href="#No5_t150-170">No5, 150–170 s</a>
+      <a role="tab" href="#No5_t42-53">No5, 42–53 s</a>
+      <a role="tab" href="#No6_t125-154">No6, 125–154 s</a>
+      <a role="tab" href="#No7_t100-110">No7, 100–110 s</a>
+    </nav>
   </div>
 </header>
-<main>
+<main class="wrap">
+  <section class="painel" id="No5_No7" role="tabpanel">
+    <h2>Cena simples e cena difícil</h2>
+    <p class="meta">No5 (8 s) seguido de No7 (10 s)</p>
+    <video controls preload="none" poster="capas/No5_No7.jpg" src="videos/grid_No5_No7_simple_vs_hard.mp4"></video>
+  </section>
+  <section class="painel" id="No5_t150-170" role="tabpanel">
+    <h2>Vídeo No5, 150 a 170 s</h2>
+    <p class="meta">Cena simples: os quatro modelos seguem a mesma tartaruga</p>
+    <video controls preload="none" poster="capas/No5_t150-170.jpg" src="videos/grid_No5_t150-170.mp4"></video>
+  </section>
+  <section class="painel" id="No5_t42-53" role="tabpanel">
+    <h2>Vídeo No5, 42 a 53 s</h2>
+    <p class="meta">Cena simples</p>
+    <video controls preload="none" poster="capas/No5_t42-53.jpg" src="videos/grid_No5_t42-53.mp4"></video>
+  </section>
+  <section class="painel" id="No6_t125-154" role="tabpanel">
+    <h2>Vídeo No6, 125 a 154 s</h2>
+    <p class="meta">Cena simples</p>
+    <video controls preload="none" poster="capas/No6_t125-154.jpg" src="videos/grid_No6_t125-154.mp4"></video>
+  </section>
+  <section class="painel" id="No7_t100-110" role="tabpanel">
+    <h2>Vídeo No7, 100 a 110 s</h2>
+    <p class="meta">Cena difícil: muitas falsas trajetórias</p>
+    <video controls preload="none" poster="capas/No7_t100-110.jpg" src="videos/grid_No7_t100-110.mp4"></video>
+  </section>
+
   <div class="legenda">
     <strong>Em cada vídeo, os mesmos segundos com quatro configurações (Dataset 3, Noguchi <em>et al.</em>, 2025):</strong>
     <ul>
@@ -80,39 +122,26 @@
       <li>(d) em baixo à direita: Exp. 4 (YOLO26s, Dataset 3 completo) + BoT-SORT</li>
     </ul>
   </div>
-
-  <section id="No5_No7">
-    <h2>Cena simples e cena difícil</h2>
-    <p class="meta">No5 (8 s) seguido de No7 (10 s)</p>
-    <video controls preload="metadata" poster="capas/No5_No7.jpg" src="videos/grid_No5_No7_simple_vs_hard.mp4"></video>
-  </section>
-
-  <section id="No7_t100-110">
-    <h2>Vídeo No7, 100 a 110 s</h2>
-    <p class="meta">Cena difícil: muitas falsas trajetórias</p>
-    <video controls preload="metadata" poster="capas/No7_t100-110.jpg" src="videos/grid_No7_t100-110.mp4"></video>
-  </section>
-
-  <section id="No5_t150-170">
-    <h2>Vídeo No5, 150 a 170 s</h2>
-    <p class="meta">Cena simples: os quatro modelos seguem a mesma tartaruga</p>
-    <video controls preload="metadata" poster="capas/No5_t150-170.jpg" src="videos/grid_No5_t150-170.mp4"></video>
-  </section>
-
-  <section id="No5_t42-53">
-    <h2>Vídeo No5, 42 a 53 s</h2>
-    <p class="meta">Cena simples</p>
-    <video controls preload="metadata" poster="capas/No5_t42-53.jpg" src="videos/grid_No5_t42-53.mp4"></video>
-  </section>
-
-  <section id="No6_t125-154">
-    <h2>Vídeo No6, 125 a 154 s</h2>
-    <p class="meta">Cena simples</p>
-    <video controls preload="metadata" poster="capas/No6_t125-154.jpg" src="videos/grid_No6_t125-154.mp4"></video>
-  </section>
 </main>
-<footer>
+<footer class="wrap">
   Código e resultados: <a href="https://github.com/gab-es21/sea-turtles-detection">github.com/gab-es21/sea-turtles-detection</a>
 </footer>
+<script>
+  // separador ativo vem do endereço (#No7_t100-110), para as ligações dos diapositivos abrirem o vídeo certo
+  const separadores = [...document.querySelectorAll('nav a')];
+  const paineis = [...document.querySelectorAll('.painel')];
+  function mostrar() {
+    const id = decodeURIComponent(location.hash.slice(1));
+    const alvo = paineis.find(p => p.id === id) || paineis[0];
+    paineis.forEach(p => {
+      const ativo = p === alvo;
+      p.classList.toggle('ativo', ativo);
+      if (!ativo) p.querySelector('video').pause();
+    });
+    separadores.forEach(a => a.setAttribute('aria-selected', a.getAttribute('href') === '#' + alvo.id));
+  }
+  window.addEventListener('hashchange', mostrar);
+  mostrar();
+</script>
 </body>
 </html>
