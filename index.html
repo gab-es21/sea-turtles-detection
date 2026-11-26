@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="pt">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Seguimento de tartarugas marinhas</title>
+<meta name="description" content="Vídeos de seguimento de tartarugas marinhas em imagens de drone: quatro configurações de deteção e seguimento lado a lado.">
+<style>
+  :root {
+    --azul: #0B2E4F;
+    --claro: #E8EEF4;
+    --texto: #1d232a;
+    --fundo: #ffffff;
+    --cartao: #f6f8fa;
+    --borda: #d5dde5;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --azul: #8fb8de;
+      --claro: #1b2a38;
+      --texto: #e6edf3;
+      --fundo: #0d1117;
+      --cartao: #161b22;
+      --borda: #30363d;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--fundo);
+    color: var(--texto);
+    font-family: Georgia, "Times New Roman", serif;
+    line-height: 1.5;
+  }
+  header {
+    background: #0B2E4F;
+    color: #fff;
+    padding: 28px 16px;
+  }
+  header .wrap, main { max-width: 1100px; margin: 0 auto; }
+  h1 { margin: 0 0 6px; font-size: 1.7rem; }
+  header p { margin: 0; opacity: .85; }
+  main { padding: 24px 16px 48px; }
+  .legenda {
+    background: var(--claro);
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-bottom: 28px;
+  }
+  .legenda ul { margin: 6px 0 0; padding-left: 20px; }
+  section { margin-bottom: 36px; scroll-margin-top: 16px; }
+  h2 { color: var(--azul); font-size: 1.25rem; margin: 0 0 4px; }
+  .meta { margin: 0 0 10px; font-size: .95rem; opacity: .8; }
+  video {
+    width: 100%;
+    height: auto;
+    border-radius: 8px;
+    border: 1px solid var(--borda);
+    background: #000;
+    display: block;
+  }
+  footer { font-size: .85rem; opacity: .7; padding: 0 16px 32px; max-width: 1100px; margin: 0 auto; }
+  a { color: var(--azul); }
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <h1>Seguimento de tartarugas marinhas em vídeos de <em>drone</em></h1>
+    <p>Dissertação de mestrado em Engenharia Informática, Universidade da Beira Interior</p>
+  </div>
+</header>
+<main>
+  <div class="legenda">
+    <strong>Em cada vídeo, os mesmos segundos com quatro configurações (Dataset 3, Noguchi <em>et al.</em>, 2025):</strong>
+    <ul>
+      <li>(a) em cima à esquerda: Exp. 3, Modelo A (YOLO26s pré-treinado) + BoT-SORT</li>
+      <li>(b) em cima à direita: <em>turtle.pt</em> (YOLOv7 dos autores) + BoT-SORT</li>
+      <li>(c) em baixo à esquerda: Exp. 1, YOLOv9m + ByteTrack</li>
+      <li>(d) em baixo à direita: Exp. 4 (YOLO26s, Dataset 3 completo) + BoT-SORT</li>
+    </ul>
+  </div>
+
+  <section id="No5_No7">
+    <h2>Cena simples e cena difícil</h2>
+    <p class="meta">No5 (8 s) seguido de No7 (10 s)</p>
+    <video controls preload="metadata" poster="capas/No5_No7.jpg" src="videos/grid_No5_No7_simple_vs_hard.mp4"></video>
+  </section>
+
+  <section id="No7_t100-110">
+    <h2>Vídeo No7, 100 a 110 s</h2>
+    <p class="meta">Cena difícil: muitas falsas trajetórias</p>
+    <video controls preload="metadata" poster="capas/No7_t100-110.jpg" src="videos/grid_No7_t100-110.mp4"></video>
+  </section>
+
+  <section id="No5_t150-170">
+    <h2>Vídeo No5, 150 a 170 s</h2>
+    <p class="meta">Cena simples: os quatro modelos seguem a mesma tartaruga</p>
+    <video controls preload="metadata" poster="capas/No5_t150-170.jpg" src="videos/grid_No5_t150-170.mp4"></video>
+  </section>
+
+  <section id="No5_t42-53">
+    <h2>Vídeo No5, 42 a 53 s</h2>
+    <p class="meta">Cena simples</p>
+    <video controls preload="metadata" poster="capas/No5_t42-53.jpg" src="videos/grid_No5_t42-53.mp4"></video>
+  </section>
+
+  <section id="No6_t125-154">
+    <h2>Vídeo No6, 125 a 154 s</h2>
+    <p class="meta">Cena simples</p>
+    <video controls preload="metadata" poster="capas/No6_t125-154.jpg" src="videos/grid_No6_t125-154.mp4"></video>
+  </section>
+</main>
+<footer>
+  Código e resultados: <a href="https://github.com/gab-es21/sea-turtles-detection">github.com/gab-es21/sea-turtles-detection</a>
+</footer>
+</body>
+</html>
