@@ -52,6 +52,8 @@ __pycache__/
 *.mov
 *.mkv
 *.avi
+# exception: tracking comparison clips shared publicly (linked from the thesis defence slides)
+!tracking_videos/*.mp4
 
 # Misc generated files
 tree.txt
